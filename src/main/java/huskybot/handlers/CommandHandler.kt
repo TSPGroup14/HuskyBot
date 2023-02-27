@@ -5,25 +5,34 @@ import huskybot.cmdFramework.Arguments
 import huskybot.cmdFramework.Context
 import huskybot.utils.separate
 import net.dv8tion.jda.api.events.GenericEvent
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.GenericMessageEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.EventListener
 import warden.framework.CommandScanner
 
+/**
+ * Command and Interaction handler for discord's interaction api
+ */
 class CommandHandler : EventListener {
     init {
         HuskyBot.log.info("${commands.size} commands in registry")
     }
 
     override fun onEvent(event: GenericEvent) {
-        if (event is MessageReceivedEvent) {
-            //Only handle the command if its from a guild
-            if (event.isFromGuild) {
-                //onGuildMessageReceived(event)
-            }
-        } else if (event is SlashCommandInteractionEvent) {
-            onSlashCommandEvent(event)
+        when (event) {
+            is SlashCommandInteractionEvent ->
+                if (event.isFromGuild)                  //Only handle the command if its from a guild
+                    onSlashCommandEvent(event)
+
+            is MessageReceivedEvent ->
+                if (event.isFromGuild) {                //Only handle the command if its from a guild
+                    //onGuildMessageRecieved(event)
+                }
+
+            is ModalInteractionEvent ->
+                onModalSubmitEvent(event)
         }
     }
 
@@ -44,6 +53,10 @@ class CommandHandler : EventListener {
         } catch (e: Exception) {
             e.stackTrace
         }
+    }
+
+    fun onModalSubmitEvent(e: ModalInteractionEvent) {
+
     }
 
     companion object {

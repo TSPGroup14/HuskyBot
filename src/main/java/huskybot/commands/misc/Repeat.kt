@@ -15,7 +15,7 @@ class Repeat : Command(ExecutionType.STANDARD) {
     override fun execute(context: Context) {
         context.embed(
             "You said",
-            context.args.gatherNext("text").removePrefix("<").removeSuffix(">")
+            context.args.gatherNext("text")
         )
     }
 }
