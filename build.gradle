@@ -1,0 +1,46 @@
+buildscript {
+    //ext.kotlin_version = '1.6.20-RC'
+    ext.kotlin_version = '1.7.0'
+    ext.logger_version = '2.17.2'
+
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+plugins {
+    id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
+}
+
+mainClassName = "huskybot.HuskyBot"
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    google()
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation("net.dv8tion:JDA:5.0.0-beta.4")
+    implementation 'com.google.guava:guava:31.1-jre'
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'kotlin'
+
+shadowJar {
+    archiveName("HuskyBot.jar")
+}
+
+test {
+    useJUnitPlatform()
+}
