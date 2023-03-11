@@ -140,8 +140,38 @@ object ModHelper {
         return CompletableFuture.supplyAsync{Result.SUCCESS}
     }
 
-    fun tryWarn() : CompletableFuture<Result> {
-        TODO("Add warning function")
+    fun tryWarn(ctx: Context, member: Member, reason: String) : CompletableFuture<Result> {
+
+        val self = ctx.guild?.selfMember
+        val moderator = ctx.member
+
+        /* Pre-Run Checks */
+
+        if(!self?.hasPermission(Permission.KICK_MEMBERS)!!) { //permission to kick and permission to warn are one in the same
+            return CompletableFuture.supplyAsync{Result.BOT_NO_PERMS}       //Bot lacks kick permission
+        }
+
+        if(!moderator.hasPermission(Permission.KICK_MEMBERS)) {
+            return CompletableFuture.supplyAsync{Result.USER_NO_PERMS}      //Moderator lacks kick permission
+        }
+
+        if(!self.canInteract(member)) {
+            return CompletableFuture.supplyAsync{Result.MEMBER_TOO_HIGH}    //Member is above the user or bot
+        }
+
+        /* Warn the User */
+        //TODO( "Still needs to log the warning. Only sends a DM to user as of now")
+
+        ctx.jda.openPrivateChannelById(member.user.idLong)
+                .queue{channel ->
+                    channel.sendMessage("You have been warned for... \n" + reason).queue()
+                }
+
+
+        /* Log the action in the modlog */
+        //Throw modlog code here
+
+        return CompletableFuture.supplyAsync{Result.SUCCESS}
     }
 }
 
