@@ -1,7 +1,7 @@
 package huskybot.commands.moderation
 
 import huskybot.cmdFramework.*
-import huskybot.modules.cmdHelpers.ModHelper
+import huskybot.modules.cmdHelpers.ModHelper.tryUnban
 import huskybot.modules.cmdHelpers.Result
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.interactions.commands.OptionType
@@ -41,7 +41,8 @@ class Unban : Command(ExecutionType.STANDARD) {
             reason = context.args.gatherNext("reason")
         }
 
-        val result = ModHelper.tryUnban(context, user, reason).get()
+        /* Send action call to ModHelper to execute the unban */
+        val result = tryUnban(context, user, reason).get()        //Result of the unban attempt
 
         when (result) {
             Result.BOT_NO_PERMS -> context.post("❌ **I do not have permissions to unban!** ❌")

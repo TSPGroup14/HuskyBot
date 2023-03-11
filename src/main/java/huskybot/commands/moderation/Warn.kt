@@ -1,7 +1,6 @@
 package huskybot.commands.moderation
 
 import huskybot.cmdFramework.*
-import huskybot.modules.cmdHelpers.ModHelper.tryKick
 import huskybot.modules.cmdHelpers.ModHelper.tryWarn
 import huskybot.modules.cmdHelpers.Result
 import net.dv8tion.jda.api.interactions.commands.OptionType
@@ -9,13 +8,13 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 @CommandProperties(description = "Issue a warning to a given user")
 @Options([
     Option(name = "user", description = "User that you would like to issue a warning", type = OptionType.USER, required = true),
-    Option(name = "reason", description = "Warning description", type = OptionType.STRING, required = false)
+    Option(name = "reason", description = "Reason for warning the user", type = OptionType.STRING, required = false)
 ])
-class Issue_Warning : Command(ExecutionType.STANDARD) {
+class Warn : Command(ExecutionType.STANDARD) {
     override fun execute(context: Context) {
         val user = context.args.gatherNext("user")
         var reason = "No reason given."
-        val member = context.guild?.getMemberById(user)                 //Refers to the user's member-id in the guild
+        val member = context.guild?.getMemberById(user)     //Refers to the user's member-id in the guild
 
         /* Null check */
         if (member == null) {

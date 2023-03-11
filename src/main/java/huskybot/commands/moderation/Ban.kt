@@ -37,7 +37,8 @@ class Ban : Command(ExecutionType.STANDARD) {
             days = context.args.gatherNext("days").toInt()
         }
 
-        val result = tryBan(context, member, reason, duration.toInt(), days.toInt()).get()
+        /* Send action call to ModHelper to execute the ban */
+        val result = tryBan(context, member, reason, duration, days).get()      //Result of the ban attempt
 
         when (result) {
             Result.BOT_NO_PERMS -> context.post("❌ **I do not have permissions to ban!** ❌")

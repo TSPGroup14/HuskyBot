@@ -14,7 +14,7 @@ class Kick : Command(ExecutionType.STANDARD) {
     override fun execute(context: Context) {
         val user = context.args.gatherNext("user")    //user as a user of the server
         var reason = "No reason given."
-        val member = context.guild?.getMemberById(user)                 //Refers to the user's member-id in the guild
+        val member = context.guild?.getMemberById(user)     //Refers to the user's member-id in the guild
 
         /* Null check */
         if (member == null) {
@@ -27,8 +27,8 @@ class Kick : Command(ExecutionType.STANDARD) {
             reason = context.args.gatherNext("reason")
         }
 
-        /* calls modules > cmdHelpers > ModHelper for the cmd needed to actually kick the user */
-        val result = tryKick(context, member, reason).get()
+        /* Send action call to ModHelper to execute the kick */
+        val result = tryKick(context, member, reason).get()         //Result of the kick attempt
 
         when (result) {
             Result.BOT_NO_PERMS -> context.post("❌ **I do not have permissions to kick!** ❌")

@@ -175,10 +175,13 @@ object ModHelper {
     }
 }
 
+/**
+ * Enum class for categorizing result types
+ */
 enum class Result {
-    SUCCESS,
-    BOT_NO_PERMS,
-    USER_NO_PERMS,
-    MEMBER_TOO_HIGH,
-    MEMBER_NOT_BANNED;
+    SUCCESS,                //Success
+    BOT_NO_PERMS,           //Bot lacks permission
+    USER_NO_PERMS,          //User lacks permission
+    MEMBER_TOO_HIGH,        //Member is above the user or bot
+    MEMBER_NOT_BANNED;      //Member is/was not banned
 }
