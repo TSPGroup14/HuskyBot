@@ -30,6 +30,9 @@ class Unban : Command(ExecutionType.STANDARD) {
                 }
             }
         }
+
+        /* This should only run if the user is not null */
+        unbanUser(context, userId, user!!)
     }
 
     private fun unbanUser(context: Context, uID: Long, user: User) {
