@@ -12,19 +12,14 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 ])
 class Kick : Command(ExecutionType.STANDARD) {
     override fun execute(context: Context) {
-        val user = context.args.gatherNext("user")    //user as a user of the server
-        var reason = "No reason given."
-        val member = context.guild?.getMemberById(user)     //Refers to the user's member-id in the guild
+        val user = context.args.next("user", ArgumentResolver.USER)!!   //user as a user of the server
+        var reason = context.args.next("reason", ArgumentResolver.STRING) ?: "No reason given."   //Gets the reason from the reason option and if null uses a default response
+        val member = context.guild?.getMemberById(user.idLong)     //Refers to the user's member-id in the guild
 
         /* Null check */
         if (member == null) {
             context.post("❌ **Could not find user!** ❌")
             return
-        }
-
-        /* Change default value if option is used */
-        if (context.args.hasNext("reason")) {
-            reason = context.args.gatherNext("reason")
         }
 
         /* Send action call to ModHelper to execute the kick */
@@ -33,8 +28,8 @@ class Kick : Command(ExecutionType.STANDARD) {
         when (result) {
             Result.BOT_NO_PERMS -> context.post("❌ **I do not have permissions to kick!** ❌")
             Result.USER_NO_PERMS -> context.post("❌ **You do not have access to this command** ❌")
-            Result.MEMBER_TOO_HIGH -> context.post("❌ **Cannot kick member, <@${user}> role is above mine!** ❌")
-            Result.SUCCESS -> context.post("**<@${user}> has been kicked!**")
+            Result.MEMBER_TOO_HIGH -> context.post("❌ **Cannot kick member, <@${user.idLong}> role is above mine!** ❌")
+            Result.SUCCESS -> context.post("**<@${user.idLong}> has been kicked!**")
             else -> context.post("❌ **An error has occured** ❌")             //This is here to handle any extraneous enum cases.
         }
     }

@@ -12,9 +12,9 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 ])
 class Warn : Command(ExecutionType.STANDARD) {
     override fun execute(context: Context) {
-        val user = context.args.gatherNext("user")
-        var reason = "No reason given."
-        val member = context.guild?.getMemberById(user)     //Refers to the user's member-id in the guild
+        val user = context.args.next("user", ArgumentResolver.USER)!!
+        var reason = context.args.next("reason", ArgumentResolver.STRING) ?: "No reason given."     //Gets the reason from the reason option and if null uses a default response
+        val member = context.guild?.getMemberById(user.idLong)     //Refers to the user's member-id in the guild
 
         /* Null check */
         if (member == null) {
@@ -22,18 +22,13 @@ class Warn : Command(ExecutionType.STANDARD) {
             return
         }
 
-        /* Change default value if option is used */
-        if (context.args.hasNext("reason")) {
-            reason = context.args.gatherNext("reason")
-        }
-
         val result = tryWarn(context, member, reason).get()
 
         when (result) {
             Result.BOT_NO_PERMS -> context.post("❌ **I do not have permissions to issue a warning!** ❌")
             Result.USER_NO_PERMS -> context.post("❌ **You do not have access to this command** ❌")
-            Result.MEMBER_TOO_HIGH -> context.post("❌ **Cannot give a warning to member, <@${user}> role is above mine!** ❌")
-            Result.SUCCESS -> context.post("**<@${user}> has been warned!**")
+            Result.MEMBER_TOO_HIGH -> context.post("❌ **Cannot give a warning to member, <@${user.idLong}> role is above mine!** ❌")
+            Result.SUCCESS -> context.post("**<@${user.idLong}> has been warned!**")
             else -> context.post("❌ **An error has occured** ❌")             //This is here to handle any extraneous enum cases.
         }
     }

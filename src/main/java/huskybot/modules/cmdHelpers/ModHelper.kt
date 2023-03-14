@@ -9,6 +9,11 @@ import net.dv8tion.jda.api.requests.RestAction
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
+/**
+ * Object class that allows the reuse of code across the bot,
+ * as well as ensures that only the correct user has access to
+ * moderator actions.
+ */
 object ModHelper {
 
     /**
