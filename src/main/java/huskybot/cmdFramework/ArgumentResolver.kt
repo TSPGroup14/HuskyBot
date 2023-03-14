@@ -3,6 +3,10 @@ package huskybot.cmdFramework
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.interactions.commands.OptionMapping
 
+/**
+ * Generic class that changes the option output given by Discord from a
+ * generic string type to its desired type.
+ */
 class ArgumentResolver<T>(val optionResolver: (OptionMapping) -> T?, val parser: (Message, String) -> T?) {
     companion object {
         val STRING = ArgumentResolver(OptionMapping::getAsString) { _, s -> s }

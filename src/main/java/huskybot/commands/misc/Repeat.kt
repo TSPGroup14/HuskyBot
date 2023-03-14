@@ -1,9 +1,6 @@
 package huskybot.commands.misc
 
-import huskybot.cmdFramework.Command
-import huskybot.cmdFramework.CommandProperties
-import huskybot.cmdFramework.Context
-import huskybot.cmdFramework.Option
+import huskybot.cmdFramework.*
 import net.dv8tion.jda.api.interactions.commands.OptionType
 
 @CommandProperties(description = "Make the bot repeat an input string")
@@ -15,7 +12,7 @@ class Repeat : Command(ExecutionType.STANDARD) {
     override fun execute(context: Context) {
         context.embed(
             "You said",
-            context.args.gatherNext("text")
+            context.args.next("text", ArgumentResolver.STRING)!!
         )
     }
 }
