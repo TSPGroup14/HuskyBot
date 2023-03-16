@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.requests.RestAction
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 
 /**
  * Object class that allows the reuse of code across the bot,
@@ -73,6 +74,7 @@ object ModHelper {
 
         val self = ctx.guild?.selfMember
         val moderator = ctx.member
+        var banned = false
 
         /* Pre-Run Checks */
 
@@ -84,18 +86,19 @@ object ModHelper {
             return CompletableFuture.supplyAsync{Result.USER_NO_PERMS}      //Moderator lacks ban permission
         }
 
-        if (ctx.jda.getUserById(user.idLong) != null) {
-            try {
-                ctx.guild.retrieveBan(user).queue(null, RestException().onFail())
-            } catch (e: java.lang.Exception) {
-                return CompletableFuture.supplyAsync { Result.MEMBER_NOT_BANNED }  //Member is not banned
-            }
+        val banList = ctx.guild.retrieveBanList().submit()                  //List of bans from the guild
+
+        for (ban in banList.get()) {
+            banned = (ban.user == user)                                     //Change banned to true if the user is in the ban list
         }
+
+        if (!banned) return CompletableFuture.supplyAsync{ Result.MEMBER_NOT_BANNED }   //User is not banned
 
         /* Log the action in the modlog */
         //Throw modlog code here
 
         /* Unban the user */
+
         ctx.guild.unban(user)
             .reason(reason)
             .queue()
