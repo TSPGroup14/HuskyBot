@@ -23,6 +23,11 @@ class ArgumentResolver<T>(val optionResolver: (OptionMapping) -> T?, val parser:
                 ?.let { m.mentions.users.firstOrNull() { u -> u.idLong == it} }
         }
 
+        val CHANNEL = ArgumentResolver(OptionMapping::getAsChannel) { m, s ->
+            s.dropWhile { !it.isDigit() }.takeWhile { it.isDigit() }.toLongOrNull()
+                ?.let {m.mentions.channels.firstOrNull() { c -> c.idLong == it} }
+        }
+
         val INTEGER = ArgumentResolver(OptionMapping::getAsInt) { _, s -> s.toIntOrNull() }
         val LONG = ArgumentResolver(OptionMapping::getAsLong) { _, s -> s.toLongOrNull() }
         val DOUBLE = ArgumentResolver(OptionMapping::getAsDouble) { _, s -> s.toDoubleOrNull() }

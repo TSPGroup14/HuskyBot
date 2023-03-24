@@ -1,11 +1,17 @@
 package huskybot.modules.cmdHelpers
 
 import huskybot.cmdFramework.Context
+import huskybot.modules.logging.ModlogManager.logBan
+import huskybot.modules.logging.ModlogManager.logKick
+import huskybot.modules.logging.ModlogManager.logUnban
+import huskybot.modules.logging.ModlogManager.logWarn
+import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.Guild.Ban
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.requests.RestAction
+import java.awt.Color
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
@@ -58,7 +64,7 @@ object ModHelper {
         }
 
         /* Log the ban in the modlog */
-        //Throw modlog code here
+        logBan(ctx, ctx.member.user, member.user, reason)
 
         return CompletableFuture.supplyAsync{Result.SUCCESS}
     }
@@ -94,14 +100,14 @@ object ModHelper {
 
         if (!banned) return CompletableFuture.supplyAsync{ Result.MEMBER_NOT_BANNED }   //User is not banned
 
-        /* Log the action in the modlog */
-        //Throw modlog code here
-
         /* Unban the user */
 
         ctx.guild.unban(user)
             .reason(reason)
             .queue()
+
+        /* Log the action in the modlog */
+        logUnban(ctx, ctx.member.user, user, reason)
 
         return CompletableFuture.supplyAsync{Result.SUCCESS}
     }
@@ -143,7 +149,7 @@ object ModHelper {
         }
 
         /* Log the action in the modlog */
-        //Throw modlog code here
+        logKick(ctx, ctx.member.user, member.user, reason)
 
         return CompletableFuture.supplyAsync{Result.SUCCESS}
     }
@@ -168,16 +174,23 @@ object ModHelper {
         }
 
         /* Warn the User */
-        //TODO( "Still needs to log the warning. Only sends a DM to user as of now")
 
-        ctx.jda.openPrivateChannelById(member.user.idLong)
+        if (!member.user.isBot) {
+            ctx.jda.openPrivateChannelById(member.user.idLong)
                 .queue{channel ->
-                    channel.sendMessage("You have been warned for... \n" + reason).queue()
+                    channel.sendMessageEmbeds(
+                        EmbedBuilder()
+                            .setTitle("You have been warned for")
+                            .setDescription(reason)
+                            .setColor(Color.red)
+                            .build()
+                    )
                 }
+        }
 
 
         /* Log the action in the modlog */
-        //Throw modlog code here
+        logWarn(ctx, ctx.member.user, member.user, reason)
 
         return CompletableFuture.supplyAsync{Result.SUCCESS}
     }
