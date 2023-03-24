@@ -2,7 +2,6 @@ package huskybot.commands.management
 
 import huskybot.Database
 import huskybot.cmdFramework.*
-import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel
 import net.dv8tion.jda.api.interactions.commands.OptionType
 
@@ -10,7 +9,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 @Options([
     Option("channel", "What channel you would like the log to be in, leave blank to disable JoinLog", OptionType.CHANNEL, false)
 ])
-class JoinLog : Command(ExecutionType.STANDARD) {
+class Joinlog : Command(ExecutionType.STANDARD) {
     override fun execute(context: Context) {
         val channel = context.args.next("channel", ArgumentResolver.CHANNEL)
 

@@ -1,5 +1,6 @@
 package huskybot.modules.cmdHelpers
 
+import huskybot.Database
 import huskybot.cmdFramework.Context
 import huskybot.modules.logging.ModlogManager.logBan
 import huskybot.modules.logging.ModlogManager.logKick
@@ -188,6 +189,8 @@ object ModHelper {
                 }
         }
 
+        /* Increment the Warn Count */
+        Database.updateWarnCount(ctx.guild.idLong, member.idLong, true)
 
         /* Log the action in the modlog */
         logWarn(ctx, ctx.member.user, member.user, reason)
