@@ -4,6 +4,7 @@ import huskybot.Database
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
+import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
 import java.awt.Color
 import java.time.Instant
 import java.time.format.DateTimeFormatter
@@ -15,7 +16,7 @@ object GuildLogManager {
      * Method that logs when a user joins the guild if the joinlog is enabled in that guild.
      * @param event GuildMemberJoinEvent object
      */
-    fun logJoin(event: GuildMemberJoinEvent) {
+    fun logUserJoin(event: GuildMemberJoinEvent) {
 
         /* Get log channel and user */
         val channel = Database.getJoinlogChannel(event.guild.idLong) ?: 0
@@ -42,5 +43,12 @@ object GuildLogManager {
         /* Send log to channel */
         event.guild.getTextChannelById(channel)?.sendMessageEmbeds(embed)
             ?.queue()
+    }
+    /**
+     * Method that logs when a user leavs the guild if the leavelog is enabled in that guild.
+     * @param event GuildMemberRemoveEvent object
+     */
+    fun logUserLeave(event: GuildMemberRemoveEvent) {
+
     }
 }

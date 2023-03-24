@@ -119,17 +119,10 @@ object Database {
 
     fun getWarnCount(guildId: Long) = getFromDatabase("warns", guildId, "count")?.toInt() ?: 0
 
-    fun warnCount(guildId: Long, userId: Long) = runSuppressed {
-        connection.use {
-            buildStatement(
-                it, "SELECT count FROM warns(guildid, count) WHERE guildid = ? AND userid = ?",
-                guildId, userId
-            ).executeUpdate()
-        }
-    }
+    fun warnCount(guildId: Long, userId: Long) = getWarnsFromDatabase("warns", guildId, userId, "count")?.toInt() ?: 0
 
     fun updateWarnCount(guildId: Long, userId: Long, inc: Boolean) = runSuppressed {
-        var warns = getWarnCount(guildId)
+        var warns = warnCount(guildId, userId)
 
         when (inc) {
             true -> connection.use {
@@ -262,6 +255,14 @@ object Database {
                 "id" else "guildid" // I'm an actual idiot I stg
 
             val results = buildStatement(it, "SELECT * FROM $table WHERE $idColumn = ?", id)
+                .executeQuery()
+
+            if (results.next()) results.getString(columnId) else null
+        }
+
+    private fun getWarnsFromDatabase(table: String, id1: Long, id2: Long, columnId: String): String? =
+        suppressedWithConnection({ null }) {
+            val results = buildStatement(it, "SELECT ? FROM ? WHERE guildid = ? AND userid = ?", columnId, table, id1, id2)
                 .executeQuery()
 
             if (results.next()) results.getString(columnId) else null
