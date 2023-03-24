@@ -4,6 +4,7 @@ import huskybot.Database
 import huskybot.cmdFramework.Context
 import huskybot.modules.logging.ModlogManager.logBan
 import huskybot.modules.logging.ModlogManager.logKick
+import huskybot.modules.logging.ModlogManager.logPardon
 import huskybot.modules.logging.ModlogManager.logUnban
 import huskybot.modules.logging.ModlogManager.logWarn
 import net.dv8tion.jda.api.EmbedBuilder
@@ -155,6 +156,13 @@ object ModHelper {
         return CompletableFuture.supplyAsync{Result.SUCCESS}
     }
 
+    /**
+     * Helper method for warning a user, which returns the result of the warning.
+     * @param ctx Context object
+     * @param member Member that is to be warned
+     * @param reason Reason for the warning, will be logged if modmail is enabled
+     * @return Result of the warning attempt
+     */
     fun tryWarn(ctx: Context, member: Member, reason: String) : CompletableFuture<Result> {
 
         val self = ctx.guild?.selfMember
@@ -189,11 +197,63 @@ object ModHelper {
                 }
         }
 
-        /* Increment the Warn Count */
+        /* Increment and get the Warn Count */
         Database.updateWarnCount(ctx.guild.idLong, member.idLong, true)
+        val warnCount = Database.getWarnCount(ctx.guild.idLong, member.idLong)
 
         /* Log the action in the modlog */
-        logWarn(ctx, ctx.member.user, member.user, reason)
+        logWarn(ctx, ctx.member.user, member.user, reason, warnCount)
+
+        return CompletableFuture.supplyAsync{Result.SUCCESS}
+    }
+
+    /**
+     * Helper method for pardoning a user, which returns the result of the pardon.
+     * @param ctx Context object
+     * @param member Member that is to be pardoned
+     * @param reason Reason for the pardon, will be logged if modmail is enabled
+     * @return Result of the pardon attempt
+     */
+    fun tryPardon(ctx: Context, member: Member, reason: String) : CompletableFuture<Result> {
+
+        val self = ctx.guild?.selfMember
+        val moderator = ctx.member
+
+        /* Pre-Run Checks */
+
+        if(!self?.hasPermission(Permission.KICK_MEMBERS)!!) { //permission to kick and permission to warn are one in the same
+            return CompletableFuture.supplyAsync{Result.BOT_NO_PERMS}       //Bot lacks kick permission
+        }
+
+        if(!moderator.hasPermission(Permission.KICK_MEMBERS)) {
+            return CompletableFuture.supplyAsync{Result.USER_NO_PERMS}      //Moderator lacks kick permission
+        }
+
+        if(!self.canInteract(member)) {
+            return CompletableFuture.supplyAsync{Result.MEMBER_TOO_HIGH}    //Member is above the user or bot
+        }
+
+        /* Pardon the User */
+
+        if (!member.user.isBot) {
+            ctx.jda.openPrivateChannelById(member.user.idLong)
+                .queue{channel ->
+                    channel.sendMessageEmbeds(
+                        EmbedBuilder()
+                            .setTitle("You have been pardoned for")
+                            .setDescription(reason)
+                            .setColor(Color.red)
+                            .build()
+                    )
+                }
+        }
+
+        /* Reduce and get the Warn Count */
+        Database.updateWarnCount(ctx.guild.idLong, member.idLong, false)
+        val warnCount = Database.getWarnCount(ctx.guild.idLong, member.idLong)
+
+        /* Log the action in the modlog */
+        logPardon(ctx, ctx.member.user, member.user, reason, warnCount)
 
         return CompletableFuture.supplyAsync{Result.SUCCESS}
     }

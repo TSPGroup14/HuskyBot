@@ -117,17 +117,15 @@ object Database {
 
     /* Warn Count related methods */
 
-    fun getWarnCount(guildId: Long) = getFromDatabase("warns", guildId, "count")?.toInt() ?: 0
-
-    fun warnCount(guildId: Long, userId: Long) = getWarnsFromDatabase("warns", guildId, userId, "count")?.toInt() ?: 0
+    fun getWarnCount(guildId: Long, userId: Long) = getWarnsFromDatabase("warns", guildId, userId, "count")?.toInt() ?: 0
 
     fun updateWarnCount(guildId: Long, userId: Long, inc: Boolean) = runSuppressed {
-        var warns = warnCount(guildId, userId)
+        var warns = getWarnCount(guildId, userId)
 
         when (inc) {
             true -> connection.use {
                 buildStatement(
-                    it, "INSERT INTO warns(guildid, userid, count) VALUES (?, ?, ?) ON CONFLICT(guildid) DO UPDATE SET count = ?",
+                    it, "INSERT INTO warns(guildid, userid, count) VALUES (?, ?, ?) ON CONFLICT(guildid, userid) DO UPDATE SET count = ?",
                     guildId, userId, warns + 1, warns + 1
                 ).executeUpdate()
             }
@@ -137,7 +135,7 @@ object Database {
                 }
 
                 buildStatement(
-                    it, "INSERT INTO warns(guildid, userid, count) VALUES (?, ?, ?) ON CONFLICT(guildid) DO UPDATE SET count = ?",
+                    it, "INSERT INTO warns(guildid, userid, count) VALUES (?, ?, ?) ON CONFLICT(guildid, userid) DO UPDATE SET count = ?",
                     guildId, userId, warns - 1, warns - 1
                 ).executeUpdate()
             }
@@ -262,7 +260,7 @@ object Database {
 
     private fun getWarnsFromDatabase(table: String, id1: Long, id2: Long, columnId: String): String? =
         suppressedWithConnection({ null }) {
-            val results = buildStatement(it, "SELECT ? FROM ? WHERE guildid = ? AND userid = ?", columnId, table, id1, id2)
+            val results = buildStatement(it, "SELECT $columnId FROM $table WHERE guildid = ? AND userid = ?", id1, id2)
                 .executeQuery()
 
             if (results.next()) results.getString(columnId) else null

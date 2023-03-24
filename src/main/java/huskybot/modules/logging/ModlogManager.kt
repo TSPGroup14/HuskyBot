@@ -73,8 +73,9 @@ object ModlogManager {
      * @param moderator User who issued a moderation command
      * @param user User who the moderation command is being acted onto
      * @param reason Reason for why the moderation command was issued
+     * @param warnCount Current warning count of the user
      */
-    fun logWarn(ctx: Context, moderator: User, user: User, reason: String) {
+    fun logWarn(ctx: Context, moderator: User, user: User, reason: String, warnCount: Int) {
         logAction(
             ctx,
             moderator,
@@ -82,7 +83,7 @@ object ModlogManager {
             reason,
             "Warn",
             ModlogColor.WARN.color,
-            null
+            arrayOf(MessageEmbed.Field("Warnings", "${warnCount}", true))
         )
     }
 
@@ -92,8 +93,9 @@ object ModlogManager {
      * @param moderator User who issued a moderation command
      * @param user User who the moderation command is being acted onto
      * @param reason Reason for why the moderation command was issued
+     * @param warnCount Current warning count of the user
      */
-    fun logPardon(ctx: Context, moderator: User, user: User, reason: String) {
+    fun logPardon(ctx: Context, moderator: User, user: User, reason: String, warnCount: Int) {
         logAction(
             ctx,
             moderator,
@@ -101,7 +103,7 @@ object ModlogManager {
             reason,
             "Pardon",
             ModlogColor.PARDON.color,
-            null
+            arrayOf(MessageEmbed.Field("Warnings", "${warnCount}", true))
         )
     }
 
@@ -144,13 +146,14 @@ object ModlogManager {
                 moderator.avatarUrl)
             .addField(MessageEmbed.Field("Type", type, true))
             .addField(MessageEmbed.Field("Reason", reason, true))
-            .build()
 
         /* Add extra fields if needed */
         if (fields != null) {
-            embed.fields.addAll(fields)
+            for (field in fields) {
+                embed.addField(field)
+            }
         }
 
-        ctx.hook.interaction.guild?.getTextChannelById(modLogID)?.sendMessageEmbeds(embed)?.queue()     //Send log to modlog channel
+        ctx.hook.interaction.guild?.getTextChannelById(modLogID)?.sendMessageEmbeds(embed.build())?.queue()     //Send log to modlog channel
     }
 }
