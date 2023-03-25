@@ -36,6 +36,10 @@ dependencies {
     /* Database */
     implementation 'org.xerial:sqlite-jdbc:3.36.0.3'
     implementation 'com.zaxxer:HikariCP:5.0.1'
+
+    /* Misc */
+    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+
 }
 
 apply plugin: 'com.github.johnrengelman.shadow'

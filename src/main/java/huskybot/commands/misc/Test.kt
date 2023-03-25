@@ -1,32 +1,21 @@
 package huskybot.commands.misc
 
-import huskybot.Database
-import huskybot.cmdFramework.*
+import huskybot.cmdFramework.Command
+import huskybot.cmdFramework.CommandProperties
+import huskybot.cmdFramework.Context
+import huskybot.cmdFramework.Option
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import warden.framework.SubCommand
 
-@CommandProperties(description = "Test command for subcommands and database")
-@Options([
-    Option("option", "What menu you would like to enter, leave blank for standard menu", OptionType.STRING,false),
-    Option("channel", "Channel that will store mod logs", OptionType.CHANNEL, false)
-])
+@CommandProperties(description = "Testing command")
 class Test : Command(ExecutionType.STANDARD) {
     override fun execute(context: Context) {
-        val channelID = context.guild?.let { Database.getModlogChannel(it.idLong) } ?: 0
-        val menu = context.args.next("option", ArgumentResolver.STRING) ?: ""
-
-        when (menu) {
-            "modlog" -> setModlogChannel(context)
-            "" -> context.embed("Current Channel", "<#${channelID}>")
-        }
+        this.subcommands[context.event.subcommandName]!!.invoke(context)
     }
 
-    @SubCommand(trigger = "modlog", description = "Set modlog channel")
-    fun setModlogChannel(context: Context) {
-        val channel = context.args.next("channel", ArgumentResolver.CHANNEL)!!
-
-        context.guild?.let { Database.setModlogChannel(it.idLong, channel.idLong) }
-
-        context.embed("Modlog Channel Set!", "<#${channel.idLong}>")
+    @Option("channel", "Channel that you would like the modlog to be in", OptionType.CHANNEL, false)
+    @SubCommand("modlog", "set modlog channel", false)
+    fun modlog(ctx: Context) {
+        ctx.post("Bonk")
     }
 }

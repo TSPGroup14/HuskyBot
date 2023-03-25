@@ -1,13 +1,8 @@
 package huskybot.cmdFramework
 
 import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.interactions.commands.Command.Subcommand
-import net.dv8tion.jda.api.interactions.commands.OptionType
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
-import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
-import warden.framework.CommandScanner
 
 class CommandLoader {
     fun loadCommands(jda: JDA) {
@@ -20,10 +15,27 @@ class CommandLoader {
             //Create slash command
             val data = Commands.slash(value.name.lowercase(), value.properties.description)
 
-            //Add the command options
-            for (option: Option in value.option) {
-                data.addOption(option.type, option.name, option.description, option.required)
+            //Load Commands and Subcommands
+            if (value.subcommands.isEmpty()) {
+
+                //Add the command options
+                for (option: Option in value.option) {
+                    data.addOption(option.type, option.name, option.description, option.required)
+                }
+
+            } else {
+                for (subcommand in value.subcommands) {
+                    val subCMD = SubcommandData(subcommand.key, subcommand.value.description)
+
+                    //Add subcommand options
+                    for (option: Option in subcommand.value.options) {
+                        subCMD.addOption(option.type, option.name, option.description, option.required)
+                    }
+
+                    data.addSubcommands(subCMD)
+                }
             }
+
 
             //Register the command
             cmds.addCommands(data)

@@ -2,6 +2,7 @@ package huskybot.handlers
 
 import huskybot.HuskyBot
 import huskybot.cmdFramework.Arguments
+import huskybot.cmdFramework.CommandScanner
 import huskybot.cmdFramework.Context
 import huskybot.utils.separate
 import net.dv8tion.jda.api.events.GenericEvent
@@ -10,7 +11,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.GenericMessageEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.EventListener
-import warden.framework.CommandScanner
 
 /**
  * Command and Interaction handler for discord's interaction api

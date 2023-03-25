@@ -1,5 +1,7 @@
 package huskybot.cmdFramework
 
+import huskybot.HuskyBot
+
 abstract class Command(private val executionType: ExecutionType) {
 
     val option: Array<Option>

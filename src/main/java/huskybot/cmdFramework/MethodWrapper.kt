@@ -5,7 +5,7 @@ import java.lang.reflect.Method
 /**
  * Handles the loading of subcommands
  */
-class MethodWrapper(val description: String, private val method: Method, private val cls: Command) {
+class MethodWrapper(val description: String, val options: Array<Option>, private val method: Method, private val cls: Command) {
 //    fun invoke(ctx: Context, withArgs: Boolean = false) {
 //        if (withArgs) {
 //            method.invoke(cls, ctx, ctx.args.drop(1))

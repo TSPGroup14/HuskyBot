@@ -1,9 +1,8 @@
-package warden.framework
+package huskybot.cmdFramework
 
 import com.google.common.reflect.ClassPath
 import huskybot.HuskyBot
-import huskybot.cmdFramework.Command
-import huskybot.cmdFramework.MethodWrapper
+import warden.framework.SubCommand
 
 class CommandScanner(private val pkg: String) {
     fun scan(): Map<String, Command> {
@@ -27,7 +26,11 @@ class CommandScanner(private val pkg: String) {
             val trigger = annotation.trigger.lowercase()
             val description = annotation.description
 
-            val wrapper = MethodWrapper(description, meth, cmd)
+            val option = meth.getAnnotation(Options::class.java)?.options
+                    ?: meth.getAnnotation(Option::class.java)?.let { arrayOf(it) }
+                    ?: emptyArray()
+
+            val wrapper = MethodWrapper(description, option, meth, cmd)
             cmd.subcommands[trigger] = wrapper
         }
 

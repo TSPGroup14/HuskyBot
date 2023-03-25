@@ -4,5 +4,6 @@ package warden.framework
 @Target(AnnotationTarget.FUNCTION)
 annotation class SubCommand(
     val trigger: String,
-    val description: String
+    val description: String,
+    val async: Boolean
 )
