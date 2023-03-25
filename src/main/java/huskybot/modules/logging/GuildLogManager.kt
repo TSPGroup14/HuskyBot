@@ -50,5 +50,25 @@ object GuildLogManager {
      */
     fun logUserLeave(event: GuildMemberRemoveEvent) {
 
+        /* Get log channel and user */
+        val channel = Database.getJoinlogChannel(event.guild.idLong) ?: 0
+        val user = event.user
+
+        /* Check if log channel exists */
+        if (channel.equals(0)) {
+            return
+        }
+
+        /* Build embedded message that will contain the log information */
+        val embed = EmbedBuilder()
+            .setTitle("User Left")
+            .setAuthor("${user.name} (${user.idLong})",null, user.avatarUrl)
+            .setColor(Color.RED)
+            .setTimestamp(Instant.now())
+            .build()
+
+        /* Send log to channel */
+        event.guild.getTextChannelById(channel)?.sendMessageEmbeds(embed)
+            ?.queue()
     }
 }
