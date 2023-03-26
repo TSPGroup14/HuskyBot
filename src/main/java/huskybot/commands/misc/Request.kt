@@ -19,13 +19,13 @@ class Request : Command(ExecutionType.STANDARD) {
             .setPlaceholder("Subject of this modal")
             .setMinLength(0)
             .setMaxLength(100) // or setRequiredRange(10, 100)
-            .build();
+            .build()
 
         val t2 = TextInput.create("body", "Body", TextInputStyle.PARAGRAPH)
             .setPlaceholder("Please enter your main text here.")
             .setMinLength(0)
             .setMaxLength(4000)
-            .build();
+            .build()
 
         val modal = Modal.create("modalOne", "Test Modal")
             .addComponents(ActionRow.of(t1), ActionRow.of(t2))

@@ -5,18 +5,17 @@ import huskybot.cmdFramework.Context
 import huskybot.modules.logging.ModlogManager.logBan
 import huskybot.modules.logging.ModlogManager.logKick
 import huskybot.modules.logging.ModlogManager.logPardon
+import huskybot.modules.logging.ModlogManager.logTimeout
 import huskybot.modules.logging.ModlogManager.logUnban
 import huskybot.modules.logging.ModlogManager.logWarn
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.Permission
-import net.dv8tion.jda.api.entities.Guild.Ban
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.User
-import net.dv8tion.jda.api.requests.RestAction
 import java.awt.Color
+import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
-import java.util.function.Consumer
 
 /**
  * Object class that allows the reuse of code across the bot,
@@ -257,6 +256,48 @@ object ModHelper {
 
         return CompletableFuture.supplyAsync{Result.SUCCESS}
     }
+
+    /**
+     * Helper method for timing out a user, which returns the result of the timeout.
+     * @param ctx Context object
+     * @param member Member that is to be timed out
+     * @param reason Reason for the timeout, will be logged if modmail is enabled
+     * @param duration How long the timeout will last, can be null if not used
+     * @return Result of the timeout attempt
+     */
+     fun tryTimeout(ctx: Context, member: Member, reason: String, duration: Duration) : CompletableFuture<Result> {
+
+        val self = ctx.guild?.selfMember
+        val moderator = ctx.member
+
+        /* Pre-Run Checks */
+
+        if(!self?.hasPermission(Permission.MODERATE_MEMBERS)!!) { //permission to kick and permission to warn are one in the same
+            return CompletableFuture.supplyAsync{Result.BOT_NO_PERMS}       //Bot lacks kick permission
+        }
+
+        if(!moderator.hasPermission(Permission.MODERATE_MEMBERS)) {
+            return CompletableFuture.supplyAsync{Result.USER_NO_PERMS}      //Moderator lacks kick permission
+        }
+
+        if(!self.canInteract(member) || member.hasPermission(Permission.ADMINISTRATOR)) {
+            return CompletableFuture.supplyAsync{Result.MEMBER_TOO_HIGH}    //Member is above the user or bot
+        }
+
+        if(duration.toDays() > 28) {
+            return CompletableFuture.supplyAsync{Result.ERROR}              //Timeout is greater than 28 days
+        }
+
+        /* Timeout the User */
+        ctx.guild.timeoutFor(member, duration)
+            .reason(reason)
+            .submit()
+
+        /* Log the action in the modlog */
+        logTimeout(ctx, moderator.user, member.user, reason, duration)
+
+        return CompletableFuture.supplyAsync{Result.SUCCESS}
+     }
 }
 
 /**
@@ -267,5 +308,6 @@ enum class Result {
     BOT_NO_PERMS,           //Bot lacks permission
     USER_NO_PERMS,          //User lacks permission
     MEMBER_TOO_HIGH,        //Member is above the user or bot
-    MEMBER_NOT_BANNED;      //Member is/was not banned
+    MEMBER_NOT_BANNED,      //Member is/was not banned
+    ERROR                   //Error has occured
 }

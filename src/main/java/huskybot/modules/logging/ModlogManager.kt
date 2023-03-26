@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.User
 import java.awt.Color
+import java.time.Duration
 import java.time.Instant
 
 object ModlogManager {
@@ -83,7 +84,7 @@ object ModlogManager {
             reason,
             "Warn",
             ModlogColor.WARN.color,
-            arrayOf(MessageEmbed.Field("Warnings", "${warnCount}", true))
+            arrayOf(MessageEmbed.Field("Warnings", "$warnCount", true))
         )
     }
 
@@ -103,7 +104,27 @@ object ModlogManager {
             reason,
             "Pardon",
             ModlogColor.PARDON.color,
-            arrayOf(MessageEmbed.Field("Warnings", "${warnCount}", true))
+            arrayOf(MessageEmbed.Field("Warnings", "$warnCount", true))
+        )
+    }
+
+    /**
+     * Interface method for logging a timeout
+     * @param ctx Context object
+     * @param moderator User who issued a moderation command
+     * @param user User who the moderation command is being acted onto
+     * @param reason Reason for why the moderation command was issued
+     * @param duration Duration of the timeout
+     */
+    fun logTimeout(ctx: Context, moderator: User, user: User, reason: String, duration: Duration) {
+        logAction(
+            ctx,
+            moderator,
+            user,
+            reason,
+            "Timeout",
+            ModlogColor.TIMEOUT.color,
+            arrayOf(MessageEmbed.Field("Duration", "${duration.toHours()} Hour(s)", true))
         )
     }
 

@@ -47,7 +47,7 @@ class Unban : Command(ExecutionType.STANDARD) {
             Result.USER_NO_PERMS -> context.post("❌ **You do not have access to this command** ❌")
             Result.MEMBER_NOT_BANNED -> context.post("❌ **Cannot unban member, <@${uID}> is not banned!** ❌")
             Result.SUCCESS -> context.post("**<@${uID}> has been unbanned!**")
-            else -> context.post("❌ **An error has occured** ❌")             //This is here to handle any extraneous enum cases.
+            else -> context.post("❌ **An error has occurred** ❌")             //This is here to handle any extraneous enum cases.
         }
     }
 }

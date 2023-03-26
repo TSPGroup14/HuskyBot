@@ -30,7 +30,7 @@ class Kick : Command(ExecutionType.STANDARD) {
             Result.USER_NO_PERMS -> context.post("❌ **You do not have access to this command** ❌")
             Result.MEMBER_TOO_HIGH -> context.post("❌ **Cannot kick member, <@${user.idLong}> role is above mine!** ❌")
             Result.SUCCESS -> context.post("**<@${user.idLong}> has been kicked!**")
-            else -> context.post("❌ **An error has occured** ❌")             //This is here to handle any extraneous enum cases.
+            else -> context.post("❌ **An error has occurred** ❌")             //This is here to handle any extraneous enum cases.
         }
     }
 }
