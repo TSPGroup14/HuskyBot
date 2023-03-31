@@ -4,6 +4,7 @@ import huskybot.HuskyBot
 import huskybot.cmdFramework.Arguments
 import huskybot.cmdFramework.CommandScanner
 import huskybot.cmdFramework.Context
+import huskybot.modules.modmail.ModmailManager.onModalSubmit
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -54,6 +55,12 @@ class CommandHandler : EventListener {
     }
 
     fun onModalSubmitEvent(e: ModalInteractionEvent) {
+
+        val modal = e.modalId
+
+        when (modal) {
+            "ticket" -> onModalSubmit(e)
+        }
 
     }
 
