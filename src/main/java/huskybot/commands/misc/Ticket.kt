@@ -8,10 +8,6 @@ import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 import net.dv8tion.jda.api.interactions.modals.Modal
 
 @CommandProperties(description = "Create a ticket")
-@Options([
-    Option(type = OptionType.STRING, name = "subject", description = "The subject of your ticket", required = true),
-    Option(type = OptionType.STRING, name = "body", description = "The body text of your ticket", required = true)
-])
 class Ticket : Command(ExecutionType.STANDARD) {
 
     override fun execute(context: Context) {

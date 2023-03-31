@@ -1,5 +1,6 @@
 package huskybot.cmdFramework
 
+import huskybot.HuskyBot
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -19,7 +20,7 @@ class Context(val event: SlashCommandInteractionEvent, val args: Arguments) {
     val hook = event.hook
 
     val embedColor: Color
-        get() = Color.decode("#ff0000")
+        get() = HuskyBot.color
 
     /**
      * Replies to an interaction with a simple embedded message.
@@ -63,6 +64,19 @@ class Context(val event: SlashCommandInteractionEvent, val args: Arguments) {
     }
 
     /**
+     * Replies to an interaction with a simple embedded message after the initial interaction has been
+     * replied to
+     * @param title Embed title
+     * @param description Embed description
+     */
+    fun hookedEmbed(title: String, description: String) {
+        hookedEmbed {
+            setTitle(title)
+            setDescription(description)
+        }
+    }
+
+    /**
      * Post an embedded message after the initial interaction has been replied to
      */
     fun hookedEmbed(block: EmbedBuilder.() -> Unit) {
@@ -71,5 +85,13 @@ class Context(val event: SlashCommandInteractionEvent, val args: Arguments) {
             .build()
 
         hook.sendMessageEmbeds(embed).queue()
+    }
+
+    /**
+     * Lets Discord know that the command has been acknowledged and that the bot will take significant
+     * time to respond
+     */
+    fun deferReply() {
+        event.deferReply().queue()
     }
 }

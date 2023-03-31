@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.security.auth.login.LoginException;
+import java.awt.*;
 import java.io.IOException;
 import java.util.EnumSet;
 
@@ -25,8 +26,9 @@ public class HuskyBot {
     //Logging
     public static final Logger log = LoggerFactory.getLogger("HuskyBot");
 
-    //private static String Token = Config.getToken();
     private static final ConfigLoader config = ConfigLoader.Companion.load();
+
+    public static final Color color = config.getEmbedColour();
     public static ShardManager shardManager;
 
     public static void main(String[] args) throws LoginException, IOException {

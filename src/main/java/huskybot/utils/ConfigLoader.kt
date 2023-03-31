@@ -1,5 +1,6 @@
 package huskybot.utils
 
+import java.awt.Color
 import java.io.FileReader
 import java.util.*
 
@@ -15,6 +16,8 @@ class ConfigLoader(filePath: String) {
 
     val token = get("token")        //discord login token
     val sentryDsn = opt("sentry")   //sentry login token
+    val embedColour = opt("color")  //embed color for the bot
+        ?.toColorOrNull() ?: Color.yellow
 
     companion object {
         fun load(): ConfigLoader {

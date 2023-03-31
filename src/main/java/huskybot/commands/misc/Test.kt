@@ -1,9 +1,7 @@
 package huskybot.commands.misc
 
-import huskybot.cmdFramework.Command
-import huskybot.cmdFramework.CommandProperties
-import huskybot.cmdFramework.Context
-import huskybot.cmdFramework.Option
+import huskybot.Database
+import huskybot.cmdFramework.*
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import warden.framework.SubCommand
 
@@ -13,9 +11,18 @@ class Test : Command(ExecutionType.STANDARD) {
         this.subcommands[context.event.subcommandName]!!.invoke(context)
     }
 
-    @Option("channel", "Channel that you would like the modlog to be in", OptionType.CHANNEL, false)
-    @SubCommand("modlog", "set modlog channel", false)
-    fun modlog(ctx: Context) {
-        ctx.post("Bonk")
+    @Option("name", "Name that you would like to use for the modmail category", OptionType.STRING, false)
+    @SubCommand("modmail", "Setup modmail", false)
+    fun modmail(ctx: Context) {
+        ctx.deferReply()
+
+        val categoryName = ctx.args.next("name", ArgumentResolver.STRING)!!
+
+        val category = ctx.guild?.createCategory(categoryName)
+            ?.submit()
+
+       ctx.guild?.let { Database.setCategory(it.idLong, category?.get()?.idLong) }
+
+        ctx.hookedEmbed("Modmail Category Created", "**Category Name:** ``${category?.get()?.name}``")
     }
 }

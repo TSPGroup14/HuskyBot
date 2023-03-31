@@ -89,7 +89,7 @@ object ModlogManager {
     }
 
     /**
-     * Interface method for logging a pardon
+     * Interface function for logging a pardon
      * @param ctx Context object
      * @param moderator User who issued a moderation command
      * @param user User who the moderation command is being acted onto
@@ -109,7 +109,7 @@ object ModlogManager {
     }
 
     /**
-     * Interface method for logging a timeout
+     * Interface function for logging a timeout
      * @param ctx Context object
      * @param moderator User who issued a moderation command
      * @param user User who the moderation command is being acted onto

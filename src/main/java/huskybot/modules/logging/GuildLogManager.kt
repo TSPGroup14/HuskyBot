@@ -13,7 +13,7 @@ import java.time.format.FormatStyle
 object GuildLogManager {
 
     /**
-     * Method that logs when a user joins the guild if the joinlog is enabled in that guild.
+     * Function that logs when a user joins the guild if the joinlog is enabled in that guild.
      * @param event GuildMemberJoinEvent object
      */
     fun logUserJoin(event: GuildMemberJoinEvent) {
@@ -45,7 +45,7 @@ object GuildLogManager {
             ?.queue()
     }
     /**
-     * Method that logs when a user leavs the guild if the leavelog is enabled in that guild.
+     * Function that logs when a user leavs the guild if the leavelog is enabled in that guild.
      * @param event GuildMemberRemoveEvent object
      */
     fun logUserLeave(event: GuildMemberRemoveEvent) {

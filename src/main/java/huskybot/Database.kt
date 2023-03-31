@@ -32,11 +32,10 @@ object Database {
             it.createStatement().apply {
                 // Guild Settings
                 addBatch("CREATE TABLE IF NOT EXISTS prefixes (id INTEGER PRIMARY KEY, prefix TEXT NOT NULL)")
-                addBatch("CREATE TABLE IF NOT EXISTS modroles (guildid INTEGER PRIMARY KEY, roleid INTEGER NOT NULL)")
-                addBatch("CREATE TABLE IF NOT EXISTS adminroles (guildid INTEGER PRIMARY KEY, roleid INTEGER NOT NULL)")
                 addBatch("CREATE TABLE IF NOT EXISTS modlogs (guildid INTEGER PRIMARY KEY, channelid INTEGER NOT NULL)")
                 addBatch("CREATE TABLE IF NOT EXISTS joinlogs (guildid INTEGER PRIMARY KEY, channelid INTEGER NOT NULL)")
                 addBatch("CREATE TABLE IF NOT EXISTS leavelogs (guildid INTEGER PRIMARY KEY, channelid INTEGER NOT NULL)")
+                addBatch("CREATE TABLE IF NOT EXISTS guildsettings (guildid INTEGER PRIMARY KEY, admin_id INTEGER, mod_id INTEGER, modmail_category INTEGER, modmail_log INTEGER)")
                 // ModLog stuff
                 addBatch("CREATE TABLE IF NOT EXISTS casenum (guildid INTEGER PRIMARY KEY, count INTEGER NOT NULL)")
                 addBatch("CREATE TABLE IF NOT EXISTS warns (guildid INTEGER, userid INTEGER, count INTEGER NOT NULL, PRIMARY KEY(guildid, userid))")
@@ -45,40 +44,41 @@ object Database {
                 addBatch("CREATE TABLE IF NOT EXISTS modmailenabled (guildid INTEGER PRIMARY KEY, state INTEGER)")
                 addBatch("CREATE TABLE IF NOT EXISTS confirmation (id INTEGER PRIMARY KEY, state INTEGER)")
                 addBatch("CREATE TABLE IF NOT EXISTS previousguild (id INTEGER PRIMARY KEY, guildid INTEGER NOT NULL)")
+                addBatch("CREATE TABLE IF NOT EXISTS userinfo (id INTEGER PRIMARY KEY, previousguild INTEGER, auto_confirm INTEGER)")
                 // Log stuff
             }.executeBatch()
         }
     }
 
     /* Server specififc admin-role */
-    fun getAdminRole(guildId: Long) = getFromDatabase("adminroles", guildId, "roleid")?.toLong()
+    fun getAdminRole(guildId: Long) = getFromDatabase("guildsettings", guildId, "admin_id")?.toLong()
 
     fun setAdminRole(guildId: Long, roleId: Long?) = runSuppressed {
         connection.use {
             if (roleId == null) {
-                buildStatement(it, "DELETE FROM adminroles WHERE guildid = ?", guildId).executeUpdate()
+                buildStatement(it, "UPDATE guildsettings SET admin_id = null WHERE guildid = ?", guildId).executeUpdate()
                 return@runSuppressed
             }
 
             buildStatement(
-                it, "INSERT INTO adminroles(guildid, roleid) VALUES (?, ?) ON CONFLICT(guildid) DO UPDATE SET roleid = ?",
+                it, "INSERT INTO guildsettings(guildid, admin_id) VALUES (?, ?) ON CONFLICT(guildid) DO UPDATE SET admin_id = ?",
                 guildId, roleId, roleId
             ).executeUpdate()
         }
     }
 
     /* Server specififc mod-role */
-    fun getModRole(guildId: Long) = getFromDatabase("modroles", guildId, "roleid")?.toLong()
+    fun getModRole(guildId: Long) = getFromDatabase("guildsettings", guildId, "mod_id")?.toLong()
 
     fun setModRole(guildId: Long, roleId: Long?) = runSuppressed {
         connection.use {
             if (roleId == null) {
-                buildStatement(it, "DELETE FROM modroles WHERE guildid = ?", guildId).executeUpdate()
+                buildStatement(it, "UPDATE guildsettings SET mod_id = null WHERE guildid = ?", guildId).executeUpdate()
                 return@runSuppressed
             }
 
             buildStatement(
-                it, "INSERT INTO modroles(guildid, roleid) VALUES (?, ?) ON CONFLICT(guildid) DO UPDATE SET roleid = ?",
+                it, "INSERT INTO guildsettings(guildid, mod_id) VALUES (?, ?) ON CONFLICT(guildid) DO UPDATE SET mod_id = ?",
                 guildId, roleId, roleId
             ).executeUpdate()
         }
@@ -178,22 +178,44 @@ object Database {
 
     /* Modmail */
 
-    fun getCategory(guildId: Long) = getFromDatabase("category", guildId, "id")?.toLong()
+    fun getCategory(guildId: Long) = getFromDatabase("guildsettings", guildId, "modmail_category")?.toLong()
 
-    fun setCategory(guildId: Long, categoryId: Long) = runSuppressed {
-        if (categoryId == null) {
-            return@runSuppressed
-        }
-
+    fun setCategory(guildId: Long, categoryId: Long?) = runSuppressed {
         connection.use {
+            if (categoryId == null) {
+                buildStatement(
+                    it, "UPDATE guildsettings SET modmail_category = null WHERE guildid = ?", guildId
+                ).executeUpdate()
+                return@runSuppressed
+            }
+
             buildStatement(
-                it, "INSERT INTO category(guildid, id) VALUES (?, ?) ON CONFLICT(guildid) DO UPDATE SET id = ?",
+                it, "INSERT INTO guildsettings(guildid, modmail_category) VALUES (?, ?) ON CONFLICT(guildid) DO UPDATE SET modmail_category = ?",
                 guildId, categoryId, categoryId
             ).executeUpdate()
         }
     }
 
-    fun getModmailState(guildId: Long) = getFromDatabase("modmailenabled", guildId, "state")?.toInt() ?: 0
+    fun getModmailLog(guildId: Long) = getFromDatabase("guildsettings", guildId, "modmail_log")?.toLong()
+
+    fun setModmailLog(guildId: Long, channelId: Long?) = runSuppressed {
+       connection.use {
+           if (channelId == null) {
+               buildStatement(
+                   it, "UPDATE guildsettings SET modmail_log = null WHERE guildid = ?", guildId
+               ).executeUpdate()
+               return@runSuppressed
+           }
+
+           buildStatement(
+               it, "INSERT INTO guildsettings(guildid, modmail_log) VALUES (?, ?) ON CONFLICT(guildid) DO UPDATE SET modmail_log = ?",
+               guildId, channelId, channelId
+           ).executeUpdate()
+       }
+    }
+    fun getModmailState(guildId: Long) : Boolean {
+        return getCategory(guildId) != null
+    }
 
     fun setModmailState(guildId: Long, newState: Boolean) = runSuppressed {
         when (newState) {
@@ -253,6 +275,16 @@ object Database {
                 "id" else "guildid" // I'm an actual idiot I stg
 
             val results = buildStatement(it, "SELECT * FROM $table WHERE $idColumn = ?", id)
+                .executeQuery()
+
+            if (results.next()) results.getString(columnId) else null
+        }
+
+    private fun getSpecificFromDatabase(table: String, id: Long, columnId: String): String? =
+        suppressedWithConnection({ null }) {
+            val idColumn = if (table.contains("userinfo")) "id" else "guildid"
+
+            val results = buildStatement(it, "SELECT $columnId FROM $table WHERE $idColumn = ?", id)
                 .executeQuery()
 
             if (results.next()) results.getString(columnId) else null
