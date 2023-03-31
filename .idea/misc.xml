@@ -16,4 +16,7 @@
   <component name="ProjectRootManager" version="2" languageLevel="JDK_13" default="true" project-jdk-name="azul-13" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
+  <component name="SuppressKotlinCodeStyleNotification">
+    <option name="disableForAll" value="true" />
+  </component>
 </project>
