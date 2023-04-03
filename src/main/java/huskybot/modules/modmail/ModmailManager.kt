@@ -19,6 +19,7 @@ import java.time.Instant
 import java.util.concurrent.TimeUnit
 import java.util.stream.Collectors
 import javax.print.attribute.standard.JobStateReason
+import javax.xml.crypto.Data
 
 object ModmailManager {
 
@@ -53,13 +54,8 @@ object ModmailManager {
      */
     fun onPrivateMessage(event: MessageReceivedEvent) {
 
-        var guild = event.jda.getGuildById(641672207491137576)
-
-        if (Database.getPreviousGuild(event.author.idLong) != null) {
-            guild = event.jda.getGuildById(
-                Database.getPreviousGuild(event.author.idLong)!!
-            )!!
-        }
+        val guild = event.jda.getGuildById( Database.getPreviousGuild(event.author.idLong)!! )
+            ?: event.author.mutualGuilds.get(0)
 
         val guildString = "**${guild?.name}** (${guild?.idLong})"
 
@@ -94,8 +90,52 @@ object ModmailManager {
         when (event.componentId) {
             "confirm" -> {
                 val guild = event.jda.getGuildById( Database.getPreviousGuild(event.user.idLong)!! )
+                    ?: event.user.mutualGuilds.get(0)
 
-                event.message.delete().queue()
+                event.message.delete().queue()      //Deletes the original message prompt
+
+                /* Check if User is in Guild */
+                if (!guild?.isMember(event.user)!!) {
+                    event.reply("❌ **You are not apart of this guild!** ❌")
+                        .queue()
+                    return
+                }
+
+                /* Check if Guild has Modmail Enabled */
+                if (!Database.getModmailState(guild.idLong)) {
+                    event.reply("❌ **This guild does not have modmail enabled!** ❌")
+                        .queue()
+                    return
+                }
+
+                /* Get Modmail Category */
+                val category = guild.getCategoryById(Database.getCategory(guild.idLong)!!)
+
+                /* Check if User Has an Open Ticket */
+                var ticketChannel:TextChannel? = null
+                for (channel in category?.textChannels!!) {
+                    if (channel.topic?.toLongOrNull() == event.user.idLong) {
+                        ticketChannel = channel
+                        break
+                    }
+                }
+
+                if (ticketChannel == null) {
+
+                    /* Get message */
+                    val messages = event.channel.iterableHistory
+                        .takeAsync(3)
+                        .thenApply {
+                                list ->
+                            list.stream()
+                                .filter{m -> m.getAuthor().equals(event.user)}
+                                .collect(Collectors.toList())
+                        }
+                    val message = messages.get().get(0).contentRaw
+
+                    createTicket(event, event.jda, guild!!, event.user, null, message, false)
+                    return
+                }
 
                 buttonMessageTicket(event, event.jda, guild!!, event.user)
             }
@@ -134,6 +174,25 @@ object ModmailManager {
         val subject = event.getValue("subject")?.asString
         val body = event.getValue("body")?.asString
 
+        /* Check if a Ticket is Already Active */
+        val category = guild?.getCategoryById(Database.getCategory(guild.idLong)!!)
+
+        var ticketChannel:TextChannel? = null
+        for (channel in category?.textChannels!!) {
+            if (channel.topic?.toLongOrNull() == event.user.idLong) {
+                ticketChannel = channel
+                break
+            }
+        }
+
+        if (ticketChannel != null) {
+            event.reply("❌ **You already have an actve ticket!** ❌")
+                .setEphemeral(true)
+                .queue()
+            return
+        }
+
+        /* Create Ticket */
         event.reply("✅ **Ticket Created** ✅").setEphemeral(true)
             .queue()
 
@@ -350,7 +409,7 @@ object ModmailManager {
 
         /* Log Ticket Closing */
 
-        event.replyEmbeds(
+        ticketLog?.sendMessageEmbeds(
             EmbedBuilder()
                 .setTitle("Ticket Closed")
                 .addField(MessageEmbed.Field("Reason", reason, true))
@@ -362,7 +421,7 @@ object ModmailManager {
 
         /* Delete Channel and Notify User */
 
-        channel.sendMessageEmbeds(
+        event.replyEmbeds(
             EmbedBuilder()
                 .setTitle("Ticket Closed")
                 .setDescription("Deleteing channel in 10 seconds...")
