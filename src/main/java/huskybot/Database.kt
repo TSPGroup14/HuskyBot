@@ -234,31 +234,31 @@ object Database {
         }
     }
 
-    fun getConfirmationState(userId: Long) = getFromDatabase("confirmation", userId, "state")?.toInt() ?: 0
+    fun getConfirmationState(userId: Long) = getFromDatabase("usersettings", userId, "auto_confirm")?.toInt() ?: 0
 
     fun setConfirmationState(userId: Long, newState: Boolean) = runSuppressed {
         when (newState) {
             true -> connection.use {
                 buildStatement(
-                    it, "INSERT INTO confirmation(id, state) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET state = ?",
+                    it, "INSERT INTO usersettings(id, auto_confirm) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET auto_confirm = ?",
                     userId, 1, 1
                 ).executeUpdate()
             }
             false -> connection.use {
                 buildStatement(
-                    it, "INSERT INTO confirmation(id, state) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET state = ?",
+                    it, "INSERT INTO usersettings(id, auto_confirm) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET auto_confirm = ?",
                     userId, 0, 0
                 ).executeUpdate()
             }
         }
     }
 
-    fun getPreviousGuild(userId: Long) = getFromDatabase("previousguild", userId, "guildid")?.toLong()
+    fun getPreviousGuild(userId: Long) = getFromDatabase("usersettings", userId, "previousguild")?.toLong()
 
     fun setPreviousGuild(userId: Long, guildId: Long) = runSuppressed {
         connection.use {
             buildStatement(
-                it, "INSERT INTO previousguild(id, guildid) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET guildid = ?",
+                it, "INSERT INTO usersettings(id, previousguild) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET previousguild = ?",
                 userId, guildId, guildId
             ).executeUpdate()
         }
@@ -271,7 +271,7 @@ object Database {
      */
     private fun getFromDatabase(table: String, id: Long, columnId: String): String? =
         suppressedWithConnection({ null }) {
-            val idColumn = if (table.contains("previousguild") || table.contains("confirmation"))
+            val idColumn = if (table.contains("usersetings") || table.contains("confirmation"))
                 "id" else "guildid" // I'm an actual idiot I stg
 
             val results = buildStatement(it, "SELECT * FROM $table WHERE $idColumn = ?", id)
