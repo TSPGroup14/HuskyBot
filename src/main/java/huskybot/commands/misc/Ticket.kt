@@ -2,12 +2,15 @@ package huskybot.commands.misc
 
 import huskybot.Database
 import huskybot.cmdFramework.*
+import huskybot.modules.modmail.ModmailManager.tryCloseTicket
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.components.ActionRow
 import net.dv8tion.jda.api.interactions.components.text.TextInput
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 import net.dv8tion.jda.api.interactions.modals.Modal
 import warden.framework.SubCommand
+import java.awt.Color
+import java.time.Instant
 
 @CommandProperties(description = "Create a ticket")
 class Ticket : Command(ExecutionType.STANDARD) {
@@ -39,17 +42,32 @@ class Ticket : Command(ExecutionType.STANDARD) {
             .queue()
     }
 
+    @Option("reason", "Reason for closing this ticket", OptionType.STRING, false)
     @SubCommand("close", "Close a ticket within this server", false)
     fun close (ctx: Context) {
+        /* Get Server Info */
         val category = ctx.guild?.getCategoryById(ctx.guild?.idLong?.let { Database.getCategory(it) }!!)
         var isInCategory = false
+
+        /* Get reason */
+        val reason = ctx.args.next("reason", ArgumentResolver.STRING) ?: "No reason given."
+
+        /* Check if Command was sent from the category */
         for (channel in category?.channels!!) {
             if (ctx.channel.idLong == channel.idLong) {
                 isInCategory = true
             }
         }
+
         if (!isInCategory) {
+            ctx.event.reply("❌ **You are not in a ticket channel** ❌")
+                .setEphemeral(true)
+                .queue()
             return
         }
+
+        /* Close Ticket */
+        tryCloseTicket(ctx.event, ctx.guild, ctx.member.user, reason)
+
     }
 }

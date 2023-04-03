@@ -49,7 +49,7 @@ class ModmailEmbedBuilder(jda: JDA, guild: Guild, userInfo: Array<String>?, mode
     val guildReceiveEmbed = EmbedBuilder()
         .setTitle("Message Recieved")
         .setDescription(message)
-        .setAuthor(userInfo?.get(0), userInfo?.get(1))
+        .setAuthor(userInfo?.get(0), null, userInfo?.get(1))
         .setFooter(jda.selfUser.name, jda.selfUser.avatarUrl)
         .setTimestamp(Instant.now())
         .setColor(Color.RED)

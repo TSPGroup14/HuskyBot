@@ -5,15 +5,20 @@ import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import java.awt.Color
 import java.time.Instant
+import java.util.concurrent.TimeUnit
+import java.util.stream.Collectors
+import javax.print.attribute.standard.JobStateReason
 
 object ModmailManager {
 
@@ -33,6 +38,10 @@ object ModmailManager {
 
         if (event.message.channel.idLong == logChannel) {
             return
+        }
+
+        if (event.message.contentRaw.startsWith("//")) {
+            return      //Returns when the message starts with a comment
         }
 
         messageTicket(event, event.jda, event.guild, event.author, event.message, event.message.contentRaw, false)
@@ -76,13 +85,32 @@ object ModmailManager {
         }
     }
 
+    /**
+     * Function that handles when a user interacts with a context button in
+     * direct messages
+     */
     fun onButtonPress(event: ButtonInteractionEvent) {
 
+        when (event.componentId) {
+            "confirm" -> {
+                val guild = event.jda.getGuildById( Database.getPreviousGuild(event.user.idLong)!! )
 
-        when (event.button.id) {
-            "confirm" -> null
+                event.message.delete().queue()
+
+                buttonMessageTicket(event, event.jda, guild!!, event.user)
+            }
             "select" -> null
-            "cancel" -> null
+            "cancel" -> {
+                /* Delete Message and Respond */
+                event.message.delete().queue {
+                    event.channel.sendMessageEmbeds(
+                        EmbedBuilder()
+                            .setDescription("❌ Request Cancelled ❌")
+                            .setColor(Color.RED)
+                            .build()
+                    ).queue()
+                }
+            }
         }
     }
 
@@ -101,7 +129,7 @@ object ModmailManager {
 
         /* Get Values */
         val guild = event.guild
-        val member = event.member
+        val member = event.member!!
         val hook = event.hook
         val subject = event.getValue("subject")?.asString
         val body = event.getValue("body")?.asString
@@ -109,7 +137,17 @@ object ModmailManager {
         event.reply("✅ **Ticket Created** ✅").setEphemeral(true)
             .queue()
 
-        createTicket(event, event.jda, guild!!, member!!.user, null, body!!, false)
+        /* Add Server To Database */
+        Database.setPreviousGuild(member.user.idLong, guild!!.idLong)
+
+        createTicket(event, event.jda, guild, member.user, null, body!!, false)
+    }
+
+    /**
+     * Interface function that handles a request to close a ticket
+     */
+    fun tryCloseTicket(event: SlashCommandInteractionEvent, guild: Guild, user: User, reason: String) {
+        closeTicket(event, guild, user, reason)
     }
 
     /**
@@ -226,11 +264,7 @@ object ModmailManager {
             val userAvatarURL = if (!isAnonymous) author.avatarUrl else "https://cdn.discordapp.com/embed/avatars/0.png"
 
             /* Get Channel */
-            for (channel in category!!.textChannels) {
-                if (channel.name == "${author.name}${author.discriminator}") {
-                    ticketChannel = channel
-                }
-            }
+            ticketChannel = guild.getTextChannelsByName("${author.name}${author.discriminator}", true).get(0)
 
             if (ticketChannel == null) {
                 return
@@ -245,8 +279,110 @@ object ModmailManager {
             ).queue{
                 event.channel.sendMessageEmbeds(
                     builder.pmSendEmbed
-                )
+                ).queue()
             }
         }
+    }
+
+    /**
+     * Private function that handles sending a message to an active ticket when a user
+     * sends a direct message
+     * @param event ButtonInteractionEvent object
+     * @param jda JDA object
+     * @param guild Guild object
+     * @param author User who interacted with the bot
+     */
+    private fun buttonMessageTicket(event: ButtonInteractionEvent, jda: JDA, guild: Guild, author: User) {
+        /* Get Guild Information */
+        val category = guild.getCategoryById(Database.getCategory(guild.idLong)!!)
+
+        /* Get Ticket Channel */
+        var ticketChannel:TextChannel? = null
+
+        /* Build User Info */
+        val userString = "${author.name}#${author.discriminator} (${author.idLong})"
+        val userAvatarURL = author.avatarUrl
+
+        /* Get Channel */
+        ticketChannel = guild.getTextChannelsByName("${author.name}${author.discriminator}", true).get(0)
+
+        if (ticketChannel == null) {
+            return
+        }
+
+        /* Get message */
+        val messages = event.channel.iterableHistory
+            .takeAsync(3)
+            .thenApply {
+                    list ->
+                list.stream()
+                    .filter{m -> m.getAuthor().equals(event.user)}
+                    .collect(Collectors.toList())
+            }
+        val message = messages.get().get(0).contentRaw
+
+        /* Setup EmbedBuilder and User Info */
+        val userInfo = arrayOf(userString, userAvatarURL!!)
+        val builder = ModmailEmbedBuilder(jda, guild, userInfo, null, message)
+
+        ticketChannel.sendMessageEmbeds(
+            builder.guildReceiveEmbed
+        ).queue{
+            event.channel.sendMessageEmbeds(
+                builder.pmSendEmbed
+            ).queue()
+        }
+    }
+
+    /**
+     * Private function that handles closing a ticket
+     * @param event SlashCommandInteractionEvent object
+     * @param guild Guild object
+     * @param user User object of who initaited the closing of the ticket
+     * @param reason Reason for why the ticket was closed
+     */
+    private fun closeTicket(event: SlashCommandInteractionEvent, guild: Guild, user: User, reason: String) {
+
+        /* Get Guild and Ticket Info */
+        val ticketLog = guild.getTextChannelById( Database.getModmailLog(guild.idLong)!! )
+        val channel = event.channel.asTextChannel()
+        val ticketAuthor = guild.getMemberById(channel.topic!!.toLong())?.user
+
+        /* Log Ticket Closing */
+
+        event.replyEmbeds(
+            EmbedBuilder()
+                .setTitle("Ticket Closed")
+                .addField(MessageEmbed.Field("Reason", reason, true))
+                .setFooter("${user.name}#${user.discriminator}", user.avatarUrl)
+                .setColor(Color.RED)
+                .setTimestamp(Instant.now())
+                .build()
+        )?.queue()
+
+        /* Delete Channel and Notify User */
+
+        channel.sendMessageEmbeds(
+            EmbedBuilder()
+                .setTitle("Ticket Closed")
+                .setDescription("Deleteing channel in 10 seconds...")
+                .setColor(Color.RED)
+                .build()
+        ).queue()
+
+        user.openPrivateChannel().queue{
+            it.sendMessageEmbeds(
+                EmbedBuilder()
+                    .setTitle("Ticket Closed")
+                    .addField(MessageEmbed.Field("Reason", reason, true))
+                    .setFooter("${user.name}#${user.discriminator}", user.avatarUrl)
+                    .setColor(Color.RED)
+                    .setTimestamp(Instant.now())
+                    .build()
+            ).queue()
+        }
+
+        channel.delete().queueAfter(10, TimeUnit.SECONDS)
+
     }
 }
