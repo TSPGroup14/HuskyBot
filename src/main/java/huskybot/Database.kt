@@ -45,7 +45,8 @@ object Database {
                 addBatch("CREATE TABLE IF NOT EXISTS confirmation (id INTEGER PRIMARY KEY, state INTEGER)")
                 addBatch("CREATE TABLE IF NOT EXISTS previousguild (id INTEGER PRIMARY KEY, guildid INTEGER NOT NULL)")
                 addBatch("CREATE TABLE IF NOT EXISTS userinfo (id INTEGER PRIMARY KEY, previousguild INTEGER, auto_confirm INTEGER)")
-                // Log stuff
+                // User stuff
+                addBatch("CREATE TABLE IF NOT EXISTS userlevel (id INTEGER, guildid INTEGER, userlevel INTEGER, PRIMARY KEY (id, guildid))")
             }.executeBatch()
         }
     }
