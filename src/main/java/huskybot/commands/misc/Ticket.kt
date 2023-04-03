@@ -1,5 +1,6 @@
 package huskybot.commands.misc
 
+import huskybot.Database
 import huskybot.cmdFramework.*
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.components.ActionRow
@@ -36,5 +37,19 @@ class Ticket : Command(ExecutionType.STANDARD) {
 
         ctx.event.replyModal(modal)
             .queue()
+    }
+
+    @SubCommand("close", "Close a ticket within this server", false)
+    fun close (ctx: Context) {
+        val category = ctx.guild?.getCategoryById(ctx.guild?.idLong?.let { Database.getCategory(it) }!!)
+        var isInCategory = false
+        for (channel in category?.channels!!) {
+            if (ctx.channel.idLong == channel.idLong) {
+                isInCategory = true
+            }
+        }
+        if (!isInCategory) {
+            return
+        }
     }
 }
