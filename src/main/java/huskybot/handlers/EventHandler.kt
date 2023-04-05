@@ -2,13 +2,16 @@ package huskybot.handlers
 
 import huskybot.modules.logging.GuildLogManager.logUserJoin
 import huskybot.modules.logging.GuildLogManager.logUserLeave
+import huskybot.modules.modmail.GuildSelector.getGuildsPrevious
 import huskybot.modules.modmail.ModmailManager.onButtonPress
 import huskybot.modules.modmail.ModmailManager.onGuildMessage
+import huskybot.modules.modmail.ModmailManager.onGuildSelect
 import huskybot.modules.modmail.ModmailManager.onPrivateMessage
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.EventListener
 
@@ -19,7 +22,8 @@ class EventHandler : EventListener {
             is GuildMemberJoinEvent -> logUserJoin(event)
             is GuildMemberRemoveEvent -> logUserLeave(event)
             is MessageReceivedEvent -> onMessageRecieved(event)
-            is ButtonInteractionEvent -> onButtonPress(event)
+            is ButtonInteractionEvent -> onInteractionButtonPressed(event)
+            is StringSelectInteractionEvent -> onGuildSelect(event)
         }
     }
 
@@ -34,5 +38,18 @@ class EventHandler : EventListener {
         } else {
             onPrivateMessage(event)
         }
+    }
+
+    private fun onInteractionButtonPressed(event: ButtonInteractionEvent) {
+
+        if (event.componentId.contains("modmail")) {
+            onButtonPress(event)
+            return
+        }
+
+        when (event.componentId) {
+            "ticket:prevpage" -> getGuildsPrevious(event)
+        }
+
     }
 }

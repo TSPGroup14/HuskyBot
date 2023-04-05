@@ -1,6 +1,8 @@
 package huskybot.modules.modmail
 
 import huskybot.Database
+import huskybot.HuskyBot
+import huskybot.modules.modmail.GuildSelector.getGuilds
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Guild
@@ -12,14 +14,14 @@ import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import java.awt.Color
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 import java.util.stream.Collectors
-import javax.print.attribute.standard.JobStateReason
-import javax.xml.crypto.Data
 
 object ModmailManager {
 
@@ -71,12 +73,12 @@ object ModmailManager {
                     "Curently sending to $guildString, press ``Confirm`` to continue. \n" +
                             "Need to message a different server? Press ``Select Guild`` to select a diffent guild. \n" +
                             "To cancel this request, press ``Cancel``.")
-                    .setColor(Color.YELLOW)
+                    .setColor(HuskyBot.color)
                     .build()
             ).addActionRow(
-                Button.success("confirm", "Confirm"),           //Confirm button for confirming guild
-                Button.secondary("select", "Select Guild"),     //Select guild button for choosing a different guild
-                Button.danger("cancel", "Cancel")               //Cancel button for canceling the message
+                Button.success("modmail:confirm", "Confirm"),           //Confirm button for confirming guild
+                Button.secondary("modmail:select", "Select Guild"),     //Select guild button for choosing a different guild
+                Button.danger("modmail:cancel", "Cancel")               //Cancel button for canceling the message
             ).queue()
         }
     }
@@ -88,7 +90,7 @@ object ModmailManager {
     fun onButtonPress(event: ButtonInteractionEvent) {
 
         when (event.componentId) {
-            "confirm" -> {
+            "modmail:confirm" -> {
                 val guild = event.jda.getGuildById( Database.getPreviousGuild(event.user.idLong)!! )
                     ?: event.user.mutualGuilds.get(0)
 
@@ -139,8 +141,10 @@ object ModmailManager {
 
                 buttonMessageTicket(event, event.jda, guild!!, event.user)
             }
-            "select" -> null
-            "cancel" -> {
+            "modmail:select" -> {
+                getGuilds(event)
+            }
+            "modmail:cancel" -> {
                 /* Delete Message and Respond */
                 event.message.delete().queue {
                     event.channel.sendMessageEmbeds(
@@ -203,6 +207,58 @@ object ModmailManager {
     }
 
     /**
+     * Method that handles when a user selects a guild through the guild selection
+     * menu, will return if modmail is not enabled in the server.
+     */
+    fun onGuildSelect(event: StringSelectInteractionEvent) {
+
+        event.message.delete().queue()  //Delete original message
+
+        /* Get Guild From Menu Value */
+        val id = event.values.get(0).subSequence(12, event.values.get(0).length).toString()
+        val guild = event.jda.getGuildById(id.toLong())
+
+
+        /* Check if Modmail is Enabled */
+        if (!Database.getModmailState(id.toLong())) {
+            event.reply("❌ **Modmail is not enabled in this server!** ❌").setEphemeral(true)
+                .queue()
+            return
+        }
+
+        /* Get Modmail Category */
+        val category = guild?.getCategoryById(Database.getCategory(guild.idLong)!!)
+
+        /* Check if User Has an Open Ticket */
+        var ticketChannel:TextChannel? = null
+        for (channel in category?.textChannels!!) {
+            if (channel.topic?.toLongOrNull() == event.user.idLong) {
+                ticketChannel = channel
+                break
+            }
+        }
+
+        if (ticketChannel == null) {
+
+            /* Get message */
+            val messages = event.channel.iterableHistory
+                .takeAsync(3)
+                .thenApply {
+                        list ->
+                    list.stream()
+                        .filter{m -> m.getAuthor().equals(event.user)}
+                        .collect(Collectors.toList())
+                }
+            val message = messages.get().get(0).contentRaw
+
+            createTicket(event, event.jda, guild!!, event.user, null, message, false)
+            return
+        }
+
+        buttonMessageTicket(event, event.jda, guild!!, event.user)
+    }
+
+    /**
      * Interface function that handles a request to close a ticket
      */
     fun tryCloseTicket(event: SlashCommandInteractionEvent, guild: Guild, user: User, reason: String) {
@@ -220,6 +276,9 @@ object ModmailManager {
      * @param isAnonymous Boolean that indicated if the ticket author wants to be annonymous
      */
     private fun createTicket(event: GenericEvent, jda: JDA, guild: Guild, author: User, message: Message?, messageString: String, isAnonymous: Boolean) {
+
+        /* Set User's Previous Guild to This Guild */
+        Database.setPreviousGuild(author.idLong, guild.idLong)
 
         /* Get Guild Information */
         val category = guild.getCategoryById(Database.getCategory(guild.idLong)!!)
@@ -351,7 +410,7 @@ object ModmailManager {
      * @param guild Guild object
      * @param author User who interacted with the bot
      */
-    private fun buttonMessageTicket(event: ButtonInteractionEvent, jda: JDA, guild: Guild, author: User) {
+    private fun buttonMessageTicket(event: GenericComponentInteractionCreateEvent, jda: JDA, guild: Guild, author: User) {
         /* Get Guild Information */
         val category = guild.getCategoryById(Database.getCategory(guild.idLong)!!)
 
@@ -397,7 +456,7 @@ object ModmailManager {
      * Private function that handles closing a ticket
      * @param event SlashCommandInteractionEvent object
      * @param guild Guild object
-     * @param user User object of who initaited the closing of the ticket
+     * @param user User object of whom initaited the closing of the ticket
      * @param reason Reason for why the ticket was closed
      */
     private fun closeTicket(event: SlashCommandInteractionEvent, guild: Guild, user: User, reason: String) {
@@ -413,6 +472,7 @@ object ModmailManager {
             EmbedBuilder()
                 .setTitle("Ticket Closed")
                 .addField(MessageEmbed.Field("Reason", reason, true))
+                .setAuthor("${ticketAuthor?.name}#${ticketAuthor?.discriminator} (${ticketAuthor?.idLong})", null, ticketAuthor?.avatarUrl)
                 .setFooter("${user.name}#${user.discriminator}", user.avatarUrl)
                 .setColor(Color.RED)
                 .setTimestamp(Instant.now())
@@ -429,12 +489,12 @@ object ModmailManager {
                 .build()
         ).queue()
 
-        user.openPrivateChannel().queue{
+        ticketAuthor?.openPrivateChannel()?.queue{
             it.sendMessageEmbeds(
                 EmbedBuilder()
                     .setTitle("Ticket Closed")
                     .addField(MessageEmbed.Field("Reason", reason, true))
-                    .setFooter("${user.name}#${user.discriminator}", user.avatarUrl)
+                    .setFooter("${guild.name} (${guild.idLong})", guild.iconUrl)
                     .setColor(Color.RED)
                     .setTimestamp(Instant.now())
                     .build()
