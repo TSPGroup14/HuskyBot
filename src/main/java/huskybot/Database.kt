@@ -44,7 +44,7 @@ object Database {
                 addBatch("CREATE TABLE IF NOT EXISTS modmailenabled (guildid INTEGER PRIMARY KEY, state INTEGER)")
                 addBatch("CREATE TABLE IF NOT EXISTS userinfo (id INTEGER PRIMARY KEY, previousguild INTEGER, auto_confirm INTEGER)")
                 // User stuff
-                addBatch("CREATE TABLE IF NOT EXISTS userlevel (id INTEGER, guildid INTEGER, level INTEGER, PRIMARY KEY(id, guildid))")
+                addBatch("CREATE TABLE IF NOT EXISTS userlevel (id INTEGER, guildid INTEGER, level INTEGER, xp INTEGER, PRIMARY KEY(id, guildid))")
             }.executeBatch()
         }
     }
@@ -177,6 +177,14 @@ object Database {
 
     /* User Leveling */
 
+    fun getUserLevel(guildId: Long, userId: Long) = getWarnsFromDatabase("userlevel", guildId, userId, "xp")?.toInt()
+
+    fun updateUserLevel(guildId: Long, userId: Long, count: Int) = runSuppressed {
+        connection.use {
+            buildStatement(it, "INSERT INTO userlevel (id, guildid, xp) VALUES (?, ?, ?) ON CONFLICT(id, guildid) DO UPDATE SET xp = xp + ?",
+            userId, guildId, count, count)
+        }
+    }
 
     /* Modmail */
 
