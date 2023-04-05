@@ -1,7 +1,6 @@
 package huskybot.handlers
 
-import huskybot.modules.leveling.messageCounter
-import huskybot.modules.leveling.messageCounter.updateLevel
+import huskybot.modules.leveling.MessageCounter.updateLevel
 import huskybot.modules.logging.GuildLogManager.logUserJoin
 import huskybot.modules.logging.GuildLogManager.logUserLeave
 import huskybot.modules.modmail.GuildSelector.getGuildsPrevious
@@ -36,8 +35,8 @@ class EventHandler : EventListener {
         }
 
         if (event.isFromGuild) {
-            //updateLevel(MessageReceivedEvent.)
-            onGuildMessage(event)
+            onGuildMessage(event)       //Modmail System Trigger
+            updateLevel(event)          //Level counter trigger
         } else {
             onPrivateMessage(event)
         }
