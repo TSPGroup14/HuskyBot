@@ -372,6 +372,16 @@ object ModmailManager {
                 }
             }
 
+            /* Send Attachments If There Are Any */
+            if (!event.message.attachments.isEmpty()) {
+                for (attachment in event.message.attachments) {
+                    channel.sendMessage(attachment.url).queue()
+                    user?.openPrivateChannel()?.queue {
+                        it.sendMessage(attachment.url).queue()
+                    }
+                }
+            }
+
         } else {
 
             /* Get Ticket Channel */
@@ -398,6 +408,14 @@ object ModmailManager {
                 event.channel.sendMessageEmbeds(
                     builder.pmSendEmbed
                 ).queue()
+            }
+
+            /* Send Attachments If There Are Any */
+            if (!event.message.attachments.isEmpty()) {
+                for (attachment in event.message.attachments) {
+                    ticketChannel.sendMessage(attachment.url).queue()
+                    event.channel.sendMessage(attachment.url).queue()
+                }
             }
         }
     }
@@ -437,7 +455,7 @@ object ModmailManager {
                     .filter{m -> m.getAuthor().equals(event.user)}
                     .collect(Collectors.toList())
             }
-        val message = messages.get().get(0).contentRaw
+        val message = messages.get()[0].contentRaw
 
         /* Setup EmbedBuilder and User Info */
         val userInfo = arrayOf(userString, userAvatarURL!!)
@@ -449,6 +467,14 @@ object ModmailManager {
             event.channel.sendMessageEmbeds(
                 builder.pmSendEmbed
             ).queue()
+        }
+
+        /* Send Attachments If There Are Any */
+        if (!messages.get()[0].attachments.isEmpty()) {
+            for (attachment in messages.get()[0].attachments) {
+                ticketChannel.sendMessage(attachment.url).queue()
+                event.channel.sendMessage(attachment.url).queue()
+            }
         }
     }
 
