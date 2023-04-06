@@ -208,7 +208,7 @@ object ModmailManager {
 
     /**
      * Method that handles when a user selects a guild through the guild selection
-     * menu, will return if modmail is not enabled in the server.
+     * menu, will return if modmail is not enabled in the guild
      */
     fun onGuildSelect(event: StringSelectInteractionEvent) {
 
@@ -244,8 +244,7 @@ object ModmailManager {
             val messages = event.channel.iterableHistory
                 .takeAsync(3)
                 .thenApply {
-                        list ->
-                    list.stream()
+                        it.stream()
                         .filter{m -> m.getAuthor().equals(event.user)}
                         .collect(Collectors.toList())
                 }
@@ -450,8 +449,7 @@ object ModmailManager {
         val messages = event.channel.iterableHistory
             .takeAsync(3)
             .thenApply {
-                    list ->
-                list.stream()
+                    it.stream()
                     .filter{m -> m.getAuthor().equals(event.user)}
                     .collect(Collectors.toList())
             }

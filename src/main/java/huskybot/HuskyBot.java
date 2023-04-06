@@ -25,10 +25,10 @@ public class HuskyBot {
 
     //Logging
     public static final Logger log = LoggerFactory.getLogger("HuskyBot");
-
     private static final ConfigLoader config = ConfigLoader.Companion.load();
 
     public static final Color color = config.getEmbedColour();
+
     public static ShardManager shardManager;
 
     public static void main(String[] args) throws LoginException, IOException {
