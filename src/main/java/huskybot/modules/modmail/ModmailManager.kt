@@ -285,10 +285,11 @@ object ModmailManager {
 
         /* Check if User is Anon */
         val userString = if (!isAnonymous) "${author.name}#${author.discriminator} (${author.idLong})" else "Anonymous#0000"
-        val userAvatarURL = if (!isAnonymous) author.avatarUrl else "https://cdn.discordapp.com/embed/avatars/0.png"
+        val userAvatarURL = if (!isAnonymous) author.avatarUrl ?: "https://cdn.discordapp.com/embed/avatars/0.png"
+            else "https://cdn.discordapp.com/embed/avatars/0.png"
 
         /* Setup EmbedBuilder and User Info */
-        val userInfo = arrayOf(userString, userAvatarURL!!)
+        val userInfo = arrayOf(userString, userAvatarURL)
         val builder = ModmailEmbedBuilder(jda, guild, userInfo, null, messageString)
 
         /* Open New Channel and Create Log of New Ticket */
@@ -351,13 +352,15 @@ object ModmailManager {
         if (event.isFromGuild) {
             /* Get Moderator Info and Check if Anon */
             val modString = if (!isAnonymous) "${event.author.name}#${event.author.discriminator} (${event.author.idLong})" else "Anonymous#0000"
-            val modAvatarURL = if (!isAnonymous) event.author.avatarUrl else "https://cdn.discordapp.com/embed/avatars/0.png"
-            val modInfo = arrayOf(modString, modAvatarURL!!)
+            val modAvatarURL = if (!isAnonymous) event.author.avatarUrl ?: "https://cdn.discordapp.com/embed/avatars/0.png"
+                else "https://cdn.discordapp.com/embed/avatars/0.png"
+            val modInfo = arrayOf(modString, modAvatarURL)
 
             /* Get the User From the Channel Info */
             val channel = event.channel.asTextChannel()
             val user = guild.getMemberById(channel.topic!!.toLong())?.user
-            val parsedUserInfo = arrayOf("${user?.name}#${user?.discriminator} (${user?.idLong})", user?.avatarUrl!!)
+            val userAvatar = user?.avatarUrl ?: "https://cdn.discordapp.com/embed/avatars/0.png"
+            val parsedUserInfo = arrayOf("${user?.name}#${user?.discriminator} (${user?.idLong})", userAvatar)
 
             /* Setup EmbedBuilder */
             val builder = ModmailEmbedBuilder(jda, guild, parsedUserInfo, modInfo, messageString)
@@ -388,7 +391,8 @@ object ModmailManager {
 
             /* Check if User is Anon */
             val userString = if (!isAnonymous) "${author.name}#${author.discriminator} (${author.idLong})" else "Anonymous#0000"
-            val userAvatarURL = if (!isAnonymous) author.avatarUrl else "https://cdn.discordapp.com/embed/avatars/0.png"
+            val userAvatarURL = if (!isAnonymous) author.avatarUrl ?: "https://cdn.discordapp.com/embed/avatars/0.png"
+                else "https://cdn.discordapp.com/embed/avatars/0.png"
 
             /* Get Channel */
             ticketChannel = guild.getTextChannelsByName("${author.name}${author.discriminator}", true).get(0)
@@ -436,7 +440,7 @@ object ModmailManager {
 
         /* Build User Info */
         val userString = "${author.name}#${author.discriminator} (${author.idLong})"
-        val userAvatarURL = author.avatarUrl
+        val userAvatarURL = author.avatarUrl ?: "https://cdn.discordapp.com/embed/avatars/0.png"
 
         /* Get Channel */
         ticketChannel = guild.getTextChannelsByName("${author.name}${author.discriminator}", true).get(0)
@@ -456,7 +460,7 @@ object ModmailManager {
         val message = messages.get()[0].contentRaw
 
         /* Setup EmbedBuilder and User Info */
-        val userInfo = arrayOf(userString, userAvatarURL!!)
+        val userInfo = arrayOf(userString, userAvatarURL)
         val builder = ModmailEmbedBuilder(jda, guild, userInfo, null, message)
 
         ticketChannel.sendMessageEmbeds(
