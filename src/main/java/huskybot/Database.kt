@@ -45,7 +45,7 @@ object Database {
                 addBatch("CREATE TABLE IF NOT EXISTS modmailenabled (guildid INTEGER PRIMARY KEY, state INTEGER)")
                 addBatch("CREATE TABLE IF NOT EXISTS userinfo (id INTEGER PRIMARY KEY, previousguild INTEGER, auto_confirm INTEGER)")
                 // User stuff
-                addBatch("CREATE TABLE IF NOT EXISTS userlevel (id INTEGER, guildid INTEGER, level INTEGER, xp INTEGER, last_update TEXT, PRIMARY KEY(id, guildid))")
+                addBatch("CREATE TABLE IF NOT EXISTS userlevel (userid INTEGER, guildid INTEGER, level INTEGER, xp INTEGER, last_update TEXT, PRIMARY KEY(userid, guildid))")
             }.executeBatch()
         }
     }
@@ -182,12 +182,21 @@ object Database {
 
     fun updateUserXP(guildId: Long, userId: Long, count: Int) = runSuppressed {
         connection.use {
-            buildStatement(it, "INSERT INTO userlevel (id, guildid, xp, last_update) VALUES (?, ?, ?, ?) ON CONFLICT(id, guildid) DO UPDATE SET xp = xp + ?, last_update = ?",
-            userId, guildId, count, Instant.now(), count, Instant.now())
+            buildStatement(it, "INSERT INTO userlevel (userid, guildid, xp, last_update) VALUES (?, ?, ?, ?) ON CONFLICT(userid, guildid) DO UPDATE SET xp = xp + ?, last_update = ?",
+            userId, guildId, count, Instant.now().toString(), count, Instant.now().toString())
+                .executeUpdate()
         }
     }
 
     fun getUserLastXPUpdate(guildId: Long, userId: Long) = getValueFromDatabase("userlevel", guildId, userId, "last_update")
+
+    fun getUserLevel(guildId: Long, userId: Long) = getValueFromDatabase("userlevel", guildId, userId, "level")?.toInt() ?: 0
+    fun updateUserLevel(guildId: Long, userId: Long, level: Int) = runSuppressed {
+        connection.use {
+            buildStatement(it, "UPDATE userlevel SET level = ? WHERE guildid = ? AND userid = ?",
+            level, guildId, userId)
+        }
+    }
 
     /* Modmail */
 

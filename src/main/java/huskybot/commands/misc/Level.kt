@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed
 @CommandProperties(description = "View your level")
 class Level : Command(ExecutionType.STANDARD) {
     override fun execute(ctx: Context) {
-        val xp = ctx.guild?.let { Database.getUserXP(it.idLong, ctx.member.idLong) }
+        val xp = ctx.guild?.let { Database.getUserXP(it.idLong, ctx.member.user.idLong) }
 
         ctx.embed{
             setTitle("Your Level")
