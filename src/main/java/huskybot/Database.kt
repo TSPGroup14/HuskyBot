@@ -187,7 +187,7 @@ object Database {
         }
     }
 
-    fun getUserLastXPUpdate(guildId: Long, userId: Long) = getValueFromDatabase("userlevel", guildId, userId, "last_update")?.toString()
+    fun getUserLastXPUpdate(guildId: Long, userId: Long) = getValueFromDatabase("userlevel", guildId, userId, "last_update")
 
     /* Modmail */
 
