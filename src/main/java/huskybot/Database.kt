@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariDataSource
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.SQLException
+import java.time.Instant
 
 object Database {
     private val pool = HikariDataSource()
@@ -44,7 +45,7 @@ object Database {
                 addBatch("CREATE TABLE IF NOT EXISTS modmailenabled (guildid INTEGER PRIMARY KEY, state INTEGER)")
                 addBatch("CREATE TABLE IF NOT EXISTS userinfo (id INTEGER PRIMARY KEY, previousguild INTEGER, auto_confirm INTEGER)")
                 // User stuff
-                addBatch("CREATE TABLE IF NOT EXISTS userlevel (id INTEGER, guildid INTEGER, level INTEGER, xp INTEGER, PRIMARY KEY(id, guildid))")
+                addBatch("CREATE TABLE IF NOT EXISTS userlevel (id INTEGER, guildid INTEGER, level INTEGER, xp INTEGER, last_update TEXT, PRIMARY KEY(id, guildid))")
             }.executeBatch()
         }
     }
@@ -116,7 +117,7 @@ object Database {
 
     /* Warn Count related methods */
 
-    fun getWarnCount(guildId: Long, userId: Long) = getWarnsFromDatabase("warns", guildId, userId, "count")?.toInt() ?: 0
+    fun getWarnCount(guildId: Long, userId: Long) = getValueFromDatabase("warns", guildId, userId, "count")?.toInt() ?: 0
 
     fun updateWarnCount(guildId: Long, userId: Long, inc: Boolean) = runSuppressed {
         var warns = getWarnCount(guildId, userId)
@@ -177,14 +178,16 @@ object Database {
 
     /* User Leveling */
 
-    fun getUserXP(guildId: Long, userId: Long) = getWarnsFromDatabase("userlevel", guildId, userId, "xp")?.toInt()
+    fun getUserXP(guildId: Long, userId: Long) = getValueFromDatabase("userlevel", guildId, userId, "xp")?.toInt()
 
     fun updateUserXP(guildId: Long, userId: Long, count: Int) = runSuppressed {
         connection.use {
-            buildStatement(it, "INSERT INTO userlevel (id, guildid, xp) VALUES (?, ?, ?) ON CONFLICT(id, guildid) DO UPDATE SET xp = xp + ?",
-            userId, guildId, count, count)
+            buildStatement(it, "INSERT INTO userlevel (id, guildid, xp, last_update) VALUES (?, ?, ?, ?) ON CONFLICT(id, guildid) DO UPDATE SET xp = xp + ?, last_update = ?",
+            userId, guildId, count, Instant.now(), count, Instant.now())
         }
     }
+
+    fun getUserLastXPUpdate(guildId: Long, userId: Long) = getValueFromDatabase("userlevel", guildId, userId, "last_update")?.toString()
 
     /* Modmail */
 
@@ -300,7 +303,7 @@ object Database {
             if (results.next()) results.getString(columnId) else null
         }
 
-    private fun getWarnsFromDatabase(table: String, id1: Long, id2: Long, columnId: String): String? =
+    private fun getValueFromDatabase(table: String, id1: Long, id2: Long, columnId: String): String? =
         suppressedWithConnection({ null }) {
             val results = buildStatement(it, "SELECT $columnId FROM $table WHERE guildid = ? AND userid = ?", id1, id2)
                 .executeQuery()
