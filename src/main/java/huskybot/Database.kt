@@ -287,6 +287,17 @@ object Database {
         }
     }
 
+    /* User Data */
+
+    fun removeUserData(guildId: Long, userId: Long) = runSuppressed {
+        connection.use {
+            buildStatement(
+                it, "DELETE FROM userlevel WHERE guildid = ?, userid = ?",
+                guildId, userId
+            ).executeUpdate()
+        }
+    }
+
     /*
      * +=================================================+
      * |                IGNORE BELOW THIS                |

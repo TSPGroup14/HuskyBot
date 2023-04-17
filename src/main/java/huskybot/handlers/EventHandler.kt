@@ -8,6 +8,7 @@ import huskybot.modules.modmail.ModmailManager.onButtonPress
 import huskybot.modules.modmail.ModmailManager.onGuildMessage
 import huskybot.modules.modmail.ModmailManager.onGuildSelect
 import huskybot.modules.modmail.ModmailManager.onPrivateMessage
+import huskybot.utils.Helpers.cleanUser
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
@@ -20,8 +21,8 @@ class EventHandler : EventListener {
     override fun onEvent(event: GenericEvent) {
         //This is where we will add specific event triggers for everything that isn't a command/interaction.
         when (event) {
-            is GuildMemberJoinEvent -> logUserJoin(event)
-            is GuildMemberRemoveEvent -> logUserLeave(event)
+            is GuildMemberJoinEvent -> onUserUpdate(event)
+            is GuildMemberRemoveEvent -> onUserUpdate(event)
             is MessageReceivedEvent -> onMessageRecieved(event)
             is ButtonInteractionEvent -> onInteractionButtonPressed(event)
             is StringSelectInteractionEvent -> onGuildSelect(event)
@@ -52,6 +53,15 @@ class EventHandler : EventListener {
         when (event.componentId) {
             "ticket:prevpage" -> getGuildsPrevious(event)
         }
+    }
 
+    private fun onUserUpdate(event: GenericEvent) {
+        when (event) {
+            is GuildMemberJoinEvent -> logUserJoin(event)
+            is GuildMemberRemoveEvent -> {
+                logUserLeave(event)
+                cleanUser(event)
+            }
+        }
     }
 }
