@@ -33,7 +33,6 @@ class User : Command(ExecutionType.STANDARD){
         ctx.embed{
             setTitle("Level Updated")
             setThumbnail(user.avatarUrl)
-            setColor(HuskyBot.color)
             addField(MessageEmbed.Field("XP Given:", amount.toString(), true))
         }
     }

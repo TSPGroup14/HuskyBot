@@ -36,7 +36,7 @@ object GuildLogManager {
                     FormatStyle.LONG)), true)
             )
             .setAuthor("${user.name} (${user.idLong})",null, user.avatarUrl)
-            .setColor(Color.RED)
+            .setColor(Color.decode("#4fe36f"))      //Green
             .setTimestamp(Instant.now())
             .build()
 
@@ -63,7 +63,7 @@ object GuildLogManager {
         val embed = EmbedBuilder()
             .setTitle("User Left")
             .setAuthor("${user.name} (${user.idLong})",null, user.avatarUrl)
-            .setColor(Color.RED)
+            .setColor(Color.decode("#c93628"))      //Red
             .setTimestamp(Instant.now())
             .build()
 

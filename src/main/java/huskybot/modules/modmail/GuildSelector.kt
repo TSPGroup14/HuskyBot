@@ -88,7 +88,6 @@ object GuildSelector {
             .addOptions(options)
             .build()
 
-        println("honk")
         event.hook.editOriginalComponents(
             ActionRow.of(selection),
             ActionRow.of(

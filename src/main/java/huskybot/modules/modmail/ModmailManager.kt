@@ -317,7 +317,7 @@ object ModmailManager {
                         "Use the command `/ticket close`")
             .setFooter(jda.selfUser.name, jda.selfUser.avatarUrl)
             .setTimestamp(Instant.now())
-            .setColor(Color.YELLOW)
+            .setColor(HuskyBot.color)
             .build(),
 
             //Embeded message with user message
