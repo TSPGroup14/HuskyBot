@@ -7,7 +7,6 @@ import java.time.Instant
 object MessageCounter {
     fun updateLevel(event: MessageReceivedEvent){
         event.member?.user?.idLong?.let { updateUserXP(event.guild.idLong, it, 2) }
-        println(Instant.now())
-//        Instant.parse()
+
     }
 }

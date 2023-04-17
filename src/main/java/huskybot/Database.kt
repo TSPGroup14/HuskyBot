@@ -191,6 +191,7 @@ object Database {
     fun getUserLastXPUpdate(guildId: Long, userId: Long) = getValueFromDatabase("userlevel", guildId, userId, "last_update")
 
     fun getUserLevel(guildId: Long, userId: Long) = getValueFromDatabase("userlevel", guildId, userId, "level")?.toInt() ?: 0
+
     fun updateUserLevel(guildId: Long, userId: Long, level: Int) = runSuppressed {
         connection.use {
             buildStatement(it, "UPDATE userlevel SET level = ? WHERE guildid = ? AND userid = ?",
