@@ -16,14 +16,12 @@ object LevelManager {
         //Only update the user xp if their current message is sent two minutes after the last xp update
         if (Instant.now().isAfter(parsedTime)) {
             event.member?.user?.idLong?.let { Database.updateUserXP(event.guild.idLong, it, xp) }
+
+            /* Check and Update User Level */
+            val totalXP = Database.getUserXP(event.guild.idLong, event.author.idLong) ?: 0
+            var level = Database.getUserLevel(event.guild.idLong, event.author.idLong)
+            level = calcLevel(totalXP, level)
         }
-
-        /* Check and Update User Level */
-        val totalXP = Database.getUserXP(event.guild.idLong, event.author.idLong) ?: 0
-        var level = Database.getUserLevel(event.guild.idLong, event.author.idLong)
-        level = calcLevel(totalXP, level)
-
-
     }
 
     fun calcLevel (xp: Int, lvl: Int): Int {
