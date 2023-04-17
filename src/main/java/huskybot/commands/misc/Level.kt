@@ -10,39 +10,21 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 @Option(name = "user", description = "User that you would like to ban", type = OptionType.USER, required = false)
 class Level : Command(ExecutionType.STANDARD) {
     override fun execute(ctx: Context) {
-        val user = ctx.args.next("user", ArgumentResolver.USER)
-        if (user == null) {
-            val xp = ctx.guild?.let { Database.getUserXP(it.idLong, ctx.member.user.idLong) } ?: 0
-            var lvl = ctx.guild?.let { Database.getUserLevel(it.idLong, ctx.member.user.idLong) } ?: 0
-            ctx.guild?.let { Database.updateUserLevel(it.idLong, ctx.member.user.idLong, lvl!!) }
-            lvl = calcLevel(xp, lvl)
+        val user = ctx.args.next("user", ArgumentResolver.USER) ?: ctx.member.user
 
-            /* Update Level */
-            ctx.guild?.idLong?.let { Database.updateUserLevel(it, ctx.member.user.idLong, lvl) }
+        val xp = ctx.guild?.let { Database.getUserXP(it.idLong, user.idLong) } ?: 0
+        var lvl = ctx.guild?.let { Database.getUserLevel(it.idLong, user.idLong) } ?: 0
+        ctx.guild?.let { Database.updateUserLevel(it.idLong, user.idLong, lvl) }
+        lvl = calcLevel(xp, lvl)
 
-            ctx.embed{
-                setTitle("Your Level")
-                addField(MessageEmbed.Field("XP:", "$xp", true))
-                addField(MessageEmbed.Field("Level:", "$lvl", true))
-                setThumbnail(ctx.member.user.avatarUrl)
-            }
-        } else {
-            val xp = ctx.guild?.let { Database.getUserXP(it.idLong, user.idLong) } ?: 0
-            var lvl = ctx.guild?.let { Database.getUserLevel(it.idLong, user.idLong) } ?: 0
-            ctx.guild?.let { Database.updateUserLevel(it.idLong, user.idLong, lvl!!) }
-            lvl = calcLevel(xp, lvl)
+        /* Update Level */
+        ctx.guild?.idLong?.let { Database.updateUserLevel(it, user.idLong, lvl) }
 
-            /* Update Level */
-            ctx.guild?.idLong?.let { Database.updateUserLevel(it, user.idLong, lvl) }
-
-            ctx.embed{
-                setTitle("Your Level")
-                addField(MessageEmbed.Field("XP:", "$xp", true))
-                addField(MessageEmbed.Field("Level:", "$lvl", true))
-                setThumbnail(user.avatarUrl)
-            }
+        ctx.embed{
+            setTitle("Your Level")
+            addField(MessageEmbed.Field("XP:", "$xp", true))
+            addField(MessageEmbed.Field("Level:", "$lvl", true))
+            setThumbnail(user.avatarUrl)
         }
-
-
     }
 }
