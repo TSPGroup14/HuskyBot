@@ -39,35 +39,39 @@ object ModHelper {
 
         val self = ctx.guild?.selfMember
         val moderator = ctx.member
+        val future = CompletableFuture.supplyAsync {
 
-        /* Pre-Ban Checks */
+            /* Pre-Ban Checks */
 
-        if(!self?.hasPermission(Permission.BAN_MEMBERS)!!) {
-            return CompletableFuture.supplyAsync{Result.BOT_NO_PERMS}       //Bot lacks ban permission
+            if(!self?.hasPermission(Permission.BAN_MEMBERS)!!) {
+                return@supplyAsync Result.BOT_NO_PERMS       //Bot lacks ban permission
+            }
+
+            if(!moderator.hasPermission(Permission.BAN_MEMBERS)) {
+                return@supplyAsync Result.USER_NO_PERMS      //Moderator lacks ban permission
+            }
+
+            if(!self.canInteract(member)) {
+                return@supplyAsync Result.MEMBER_TOO_HIGH    //Member is above the user or bot
+            }
+
+            /* Attempt ban */
+
+            try {
+                ctx.guild.ban(member, delDays, TimeUnit.DAYS)
+                    .reason(reason)
+                    .queue()
+            } catch (e: Exception) {
+                throw e
+            }
+
+            /* Log the ban in the modlog */
+            logBan(ctx, ctx.member.user, member.user, reason)
+
+            return@supplyAsync Result.SUCCESS
         }
 
-        if(!moderator.hasPermission(Permission.BAN_MEMBERS)) {
-            return CompletableFuture.supplyAsync{Result.USER_NO_PERMS}      //Moderator lacks ban permission
-        }
-
-        if(!self.canInteract(member)) {
-            return CompletableFuture.supplyAsync{Result.MEMBER_TOO_HIGH}    //Member is above the user or bot
-        }
-
-        /* Attempt ban */
-
-        try {
-            ctx.guild.ban(member, delDays, TimeUnit.DAYS)
-                .reason(reason)
-                .queue()
-        } catch (e: Exception) {
-            throw e
-        }
-
-        /* Log the ban in the modlog */
-        logBan(ctx, ctx.member.user, member.user, reason)
-
-        return CompletableFuture.supplyAsync{Result.SUCCESS}
+        return future
     }
 
     /**
@@ -82,35 +86,39 @@ object ModHelper {
         val self = ctx.guild?.selfMember
         val moderator = ctx.member
         var banned = false
+        val future = CompletableFuture.supplyAsync {
 
-        /* Pre-Run Checks */
+            /* Pre-Run Checks */
 
-        if(!self?.hasPermission(Permission.BAN_MEMBERS)!!) {
-            return CompletableFuture.supplyAsync{Result.BOT_NO_PERMS}       //Bot lacks ban permission
+            if(!self?.hasPermission(Permission.BAN_MEMBERS)!!) {
+                return@supplyAsync Result.BOT_NO_PERMS       //Bot lacks ban permission
+            }
+
+            if(!moderator.hasPermission(Permission.BAN_MEMBERS)) {
+                return@supplyAsync Result.USER_NO_PERMS      //Moderator lacks ban permission
+            }
+
+            val banList = ctx.guild.retrieveBanList().submit()                  //List of bans from the guild
+
+            for (ban in banList.get()) {
+                banned = (ban.user == user)                                     //Change banned to true if the user is in the ban list
+            }
+
+            if (!banned) return@supplyAsync Result.MEMBER_NOT_BANNED    //User is not banned
+
+            /* Unban the user */
+
+            ctx.guild.unban(user)
+                .reason(reason)
+                .queue()
+
+            /* Log the action in the modlog */
+            logUnban(ctx, ctx.member.user, user, reason)
+
+            return@supplyAsync Result.SUCCESS
         }
 
-        if(!moderator.hasPermission(Permission.BAN_MEMBERS)) {
-            return CompletableFuture.supplyAsync{Result.USER_NO_PERMS}      //Moderator lacks ban permission
-        }
-
-        val banList = ctx.guild.retrieveBanList().submit()                  //List of bans from the guild
-
-        for (ban in banList.get()) {
-            banned = (ban.user == user)                                     //Change banned to true if the user is in the ban list
-        }
-
-        if (!banned) return CompletableFuture.supplyAsync{ Result.MEMBER_NOT_BANNED }   //User is not banned
-
-        /* Unban the user */
-
-        ctx.guild.unban(user)
-            .reason(reason)
-            .queue()
-
-        /* Log the action in the modlog */
-        logUnban(ctx, ctx.member.user, user, reason)
-
-        return CompletableFuture.supplyAsync{Result.SUCCESS}
+        return future
     }
 
     /**
@@ -124,35 +132,39 @@ object ModHelper {
 
         val self = ctx.guild?.selfMember
         val moderator = ctx.member
+        val future = CompletableFuture.supplyAsync {
 
-        /* Pre-Run Checks */
+            /* Pre-Run Checks */
 
-        if(!self?.hasPermission(Permission.KICK_MEMBERS)!!) {
-            return CompletableFuture.supplyAsync{Result.BOT_NO_PERMS}       //Bot lacks kick permission
+            if(!self?.hasPermission(Permission.KICK_MEMBERS)!!) {
+                return@supplyAsync Result.BOT_NO_PERMS       //Bot lacks kick permission
+            }
+
+            if(!moderator.hasPermission(Permission.KICK_MEMBERS)) {
+                return@supplyAsync Result.USER_NO_PERMS      //Moderator lacks kick permission
+            }
+
+            if(!self.canInteract(member)) {
+                return@supplyAsync Result.MEMBER_TOO_HIGH    //Member is above the user or bot
+            }
+
+            /* Attempt kick */
+
+            try {
+                ctx.guild.kick(member)
+                    .reason(reason)
+                    .queue()
+            } catch (e: Exception) {
+                throw e
+            }
+
+            /* Log the action in the modlog */
+            logKick(ctx, ctx.member.user, member.user, reason)
+
+            return@supplyAsync Result.SUCCESS
         }
 
-        if(!moderator.hasPermission(Permission.KICK_MEMBERS)) {
-            return CompletableFuture.supplyAsync{Result.USER_NO_PERMS}      //Moderator lacks kick permission
-        }
-
-        if(!self.canInteract(member)) {
-            return CompletableFuture.supplyAsync{Result.MEMBER_TOO_HIGH}    //Member is above the user or bot
-        }
-
-        /* Attempt kick */
-
-        try {
-            ctx.guild.kick(member)
-                .reason(reason)
-                .queue()
-        } catch (e: Exception) {
-            throw e
-        }
-
-        /* Log the action in the modlog */
-        logKick(ctx, ctx.member.user, member.user, reason)
-
-        return CompletableFuture.supplyAsync{Result.SUCCESS}
+        return future
     }
 
     /**
@@ -166,44 +178,48 @@ object ModHelper {
 
         val self = ctx.guild?.selfMember
         val moderator = ctx.member
+        val future = CompletableFuture.supplyAsync {
 
-        /* Pre-Run Checks */
+            /* Pre-Run Checks */
 
-        if(!self?.hasPermission(Permission.KICK_MEMBERS)!!) { //permission to kick and permission to warn are one in the same
-            return CompletableFuture.supplyAsync{Result.BOT_NO_PERMS}       //Bot lacks kick permission
+            if(!self?.hasPermission(Permission.KICK_MEMBERS)!!) { //permission to kick and permission to warn are one in the same
+                return@supplyAsync Result.BOT_NO_PERMS       //Bot lacks kick permission
+            }
+
+            if(!moderator.hasPermission(Permission.KICK_MEMBERS)) {
+                return@supplyAsync Result.USER_NO_PERMS      //Moderator lacks kick permission
+            }
+
+            if(!self.canInteract(member)) {
+                return@supplyAsync Result.MEMBER_TOO_HIGH    //Member is above the user or bot
+            }
+
+            /* Warn the User */
+
+            if (!member.user.isBot) {
+                ctx.jda.openPrivateChannelById(member.user.idLong)
+                    .queue{channel ->
+                        channel.sendMessageEmbeds(
+                            EmbedBuilder()
+                                .setTitle("You have been warned for")
+                                .setDescription(reason)
+                                .setColor(Color.red)
+                                .build()
+                        )
+                    }
+            }
+
+            /* Increment and get the Warn Count */
+            Database.updateWarnCount(ctx.guild.idLong, member.idLong, true)
+            val warnCount = Database.getWarnCount(ctx.guild.idLong, member.idLong)
+
+            /* Log the action in the modlog */
+            logWarn(ctx, ctx.member.user, member.user, reason, warnCount)
+
+            return@supplyAsync Result.SUCCESS
         }
 
-        if(!moderator.hasPermission(Permission.KICK_MEMBERS)) {
-            return CompletableFuture.supplyAsync{Result.USER_NO_PERMS}      //Moderator lacks kick permission
-        }
-
-        if(!self.canInteract(member)) {
-            return CompletableFuture.supplyAsync{Result.MEMBER_TOO_HIGH}    //Member is above the user or bot
-        }
-
-        /* Warn the User */
-
-        if (!member.user.isBot) {
-            ctx.jda.openPrivateChannelById(member.user.idLong)
-                .queue{channel ->
-                    channel.sendMessageEmbeds(
-                        EmbedBuilder()
-                            .setTitle("You have been warned for")
-                            .setDescription(reason)
-                            .setColor(Color.red)
-                            .build()
-                    )
-                }
-        }
-
-        /* Increment and get the Warn Count */
-        Database.updateWarnCount(ctx.guild.idLong, member.idLong, true)
-        val warnCount = Database.getWarnCount(ctx.guild.idLong, member.idLong)
-
-        /* Log the action in the modlog */
-        logWarn(ctx, ctx.member.user, member.user, reason, warnCount)
-
-        return CompletableFuture.supplyAsync{Result.SUCCESS}
+        return future
     }
 
     /**
@@ -217,44 +233,48 @@ object ModHelper {
 
         val self = ctx.guild?.selfMember
         val moderator = ctx.member
+        val future = CompletableFuture.supplyAsync {
 
-        /* Pre-Run Checks */
+            /* Pre-Run Checks */
 
-        if(!self?.hasPermission(Permission.KICK_MEMBERS)!!) { //permission to kick and permission to warn are one in the same
-            return CompletableFuture.supplyAsync{Result.BOT_NO_PERMS}       //Bot lacks kick permission
+            if(!self?.hasPermission(Permission.KICK_MEMBERS)!!) { //permission to kick and permission to warn are one in the same
+                return@supplyAsync Result.BOT_NO_PERMS       //Bot lacks kick permission
+            }
+
+            if(!moderator.hasPermission(Permission.KICK_MEMBERS)) {
+                return@supplyAsync Result.USER_NO_PERMS      //Moderator lacks kick permission
+            }
+
+            if(!self.canInteract(member)) {
+                return@supplyAsync Result.MEMBER_TOO_HIGH    //Member is above the user or bot
+            }
+
+            /* Pardon the User */
+
+            if (!member.user.isBot) {
+                ctx.jda.openPrivateChannelById(member.user.idLong)
+                    .queue{channel ->
+                        channel.sendMessageEmbeds(
+                            EmbedBuilder()
+                                .setTitle("You have been pardoned for")
+                                .setDescription(reason)
+                                .setColor(Color.red)
+                                .build()
+                        )
+                    }
+            }
+
+            /* Reduce and get the Warn Count */
+            Database.updateWarnCount(ctx.guild.idLong, member.idLong, false)
+            val warnCount = Database.getWarnCount(ctx.guild.idLong, member.idLong)
+
+            /* Log the action in the modlog */
+            logPardon(ctx, ctx.member.user, member.user, reason, warnCount)
+
+            return@supplyAsync Result.SUCCESS
         }
 
-        if(!moderator.hasPermission(Permission.KICK_MEMBERS)) {
-            return CompletableFuture.supplyAsync{Result.USER_NO_PERMS}      //Moderator lacks kick permission
-        }
-
-        if(!self.canInteract(member)) {
-            return CompletableFuture.supplyAsync{Result.MEMBER_TOO_HIGH}    //Member is above the user or bot
-        }
-
-        /* Pardon the User */
-
-        if (!member.user.isBot) {
-            ctx.jda.openPrivateChannelById(member.user.idLong)
-                .queue{channel ->
-                    channel.sendMessageEmbeds(
-                        EmbedBuilder()
-                            .setTitle("You have been pardoned for")
-                            .setDescription(reason)
-                            .setColor(Color.red)
-                            .build()
-                    )
-                }
-        }
-
-        /* Reduce and get the Warn Count */
-        Database.updateWarnCount(ctx.guild.idLong, member.idLong, false)
-        val warnCount = Database.getWarnCount(ctx.guild.idLong, member.idLong)
-
-        /* Log the action in the modlog */
-        logPardon(ctx, ctx.member.user, member.user, reason, warnCount)
-
-        return CompletableFuture.supplyAsync{Result.SUCCESS}
+        return future
     }
 
     /**
@@ -269,34 +289,38 @@ object ModHelper {
 
         val self = ctx.guild?.selfMember
         val moderator = ctx.member
+        val future = CompletableFuture.supplyAsync {
 
-        /* Pre-Run Checks */
+            /* Pre-Run Checks */
 
-        if(!self?.hasPermission(Permission.MODERATE_MEMBERS)!!) { //permission to kick and permission to warn are one in the same
-            return CompletableFuture.supplyAsync{Result.BOT_NO_PERMS}       //Bot lacks kick permission
+            if(!self?.hasPermission(Permission.MODERATE_MEMBERS)!!) { //permission to kick and permission to warn are one in the same
+                return@supplyAsync Result.BOT_NO_PERMS       //Bot lacks kick permission
+            }
+
+            if(!moderator.hasPermission(Permission.MODERATE_MEMBERS)) {
+                return@supplyAsync Result.USER_NO_PERMS      //Moderator lacks kick permission
+            }
+
+            if(!self.canInteract(member) || member.hasPermission(Permission.ADMINISTRATOR)) {
+                return@supplyAsync Result.MEMBER_TOO_HIGH    //Member is above the user or bot
+            }
+
+            if(duration.toDays() > 28) {
+                return@supplyAsync Result.ERROR              //Timeout is greater than 28 days
+            }
+
+            /* Timeout the User */
+            ctx.guild.timeoutFor(member, duration)
+                .reason(reason)
+                .submit()
+
+            /* Log the action in the modlog */
+            logTimeout(ctx, moderator.user, member.user, reason, duration)
+
+            return@supplyAsync Result.SUCCESS
         }
 
-        if(!moderator.hasPermission(Permission.MODERATE_MEMBERS)) {
-            return CompletableFuture.supplyAsync{Result.USER_NO_PERMS}      //Moderator lacks kick permission
-        }
-
-        if(!self.canInteract(member) || member.hasPermission(Permission.ADMINISTRATOR)) {
-            return CompletableFuture.supplyAsync{Result.MEMBER_TOO_HIGH}    //Member is above the user or bot
-        }
-
-        if(duration.toDays() > 28) {
-            return CompletableFuture.supplyAsync{Result.ERROR}              //Timeout is greater than 28 days
-        }
-
-        /* Timeout the User */
-        ctx.guild.timeoutFor(member, duration)
-            .reason(reason)
-            .submit()
-
-        /* Log the action in the modlog */
-        logTimeout(ctx, moderator.user, member.user, reason, duration)
-
-        return CompletableFuture.supplyAsync{Result.SUCCESS}
+        return future
      }
 }
 
