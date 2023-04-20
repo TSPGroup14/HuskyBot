@@ -293,7 +293,7 @@ object ModHelper {
 
             /* Pre-Run Checks */
 
-            if(!self?.hasPermission(Permission.MODERATE_MEMBERS)!!) { //permission to kick and permission to warn are one in the same
+            if(!self?.hasPermission(Permission.MODERATE_MEMBERS)!!) {
                 return@supplyAsync Result.BOT_NO_PERMS       //Bot lacks kick permission
             }
 
