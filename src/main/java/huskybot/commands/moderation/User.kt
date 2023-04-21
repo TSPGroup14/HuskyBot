@@ -20,7 +20,7 @@ class User : Command(ExecutionType.STANDARD){
     @SubCommand("grantxp", "Change a user's XP", false)
     fun grantXP (ctx: Context) {
         val user = ctx.args.next("user", ArgumentResolver.USER)
-        val amount = ctx.args.next("amount", ArgumentResolver.INTEGER) ?: 0
+        val amount = ctx.args.next("amount", ArgumentResolver.LONG) ?: 0
 
         /* Null check */
         if (user == null) {

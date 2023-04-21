@@ -178,9 +178,9 @@ object Database {
 
     /* User Leveling */
 
-    fun getUserXP(guildId: Long, userId: Long) = getValueFromDatabase("userlevel", guildId, userId, "xp")?.toInt()
+    fun getUserXP(guildId: Long, userId: Long) = getValueFromDatabase("userlevel", guildId, userId, "xp")?.toLong() ?: 0
 
-    fun updateUserXP(guildId: Long, userId: Long, count: Int) = runSuppressed {
+    fun updateUserXP(guildId: Long, userId: Long, count: Long) = runSuppressed {
         connection.use {
             buildStatement(it, "INSERT INTO userlevel (userid, guildid, xp, last_update) VALUES (?, ?, ?, ?) ON CONFLICT(userid, guildid) DO UPDATE SET xp = xp + ?, last_update = ?",
             userId, guildId, count, Instant.now().toString(), count, Instant.now().toString())
