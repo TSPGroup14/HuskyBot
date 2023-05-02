@@ -47,7 +47,7 @@ public class HuskyBot {
                 .enableIntents(GatewayIntent.GUILD_MEMBERS)                         //Enable privileged gateway
                 .addEventListeners( new CommandHandler(), new EventHandler())       //Start event listeners
                 .setStatus(OnlineStatus.DO_NOT_DISTURB)                             //Set bot status
-                .setActivity(Activity.watching("Go MTU!"));                   //Might as well rep the school
+                .setActivity(Activity.watching("Protecting Your Server"));                   //Might as well rep the school
 
 
         shardManager = shardManagerBuilder.build();

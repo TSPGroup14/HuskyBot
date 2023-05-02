@@ -57,7 +57,7 @@ object ModmailManager {
     fun onPrivateMessage(event: MessageReceivedEvent) {
 
         val guild = event.jda.getGuildById( Database.getPreviousGuild(event.author.idLong)!! )
-            ?: event.author.mutualGuilds.get(0)
+            ?: event.author.mutualGuilds[0]
 
         val guildString = "**${guild?.name}** (${guild?.idLong})"
 
@@ -92,7 +92,7 @@ object ModmailManager {
         when (event.componentId) {
             "modmail:confirm" -> {
                 val guild = event.jda.getGuildById( Database.getPreviousGuild(event.user.idLong)!! )
-                    ?: event.user.mutualGuilds.get(0)
+                    ?: event.user.mutualGuilds[0]
 
                 event.message.delete().queue()      //Deletes the original message prompt
 
