@@ -15,6 +15,11 @@ abstract class Command(private val executionType: ExecutionType) {
         if (properties.developerOnly) {
             return
         }
+        if (properties.category.equals(CommandCategory.MANAGEMENT) && !CommandChecks().checkModPerms(context)) {
+            context.post("❌ **You do not have access to this command** ❌")
+            return
+        }
+
         execute(context)
     }
 

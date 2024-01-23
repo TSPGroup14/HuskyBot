@@ -2,12 +2,13 @@ package huskybot.commands.management
 
 import huskybot.Database
 import huskybot.cmdFramework.*
-import net.dv8tion.jda.api.EmbedBuilder
-import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import warden.framework.SubCommand
 
-@CommandProperties(description = "Enable modlog and set what channel you would like to be the log")
+@CommandProperties(
+    description = "Enable modlog and set what channel you would like to be the log",
+    category = CommandCategory.MANAGEMENT
+)
 @Options([
     Option("channel", "What channel you would like the log to be in, leave blank to disable modlog", OptionType.CHANNEL, false)
 ])

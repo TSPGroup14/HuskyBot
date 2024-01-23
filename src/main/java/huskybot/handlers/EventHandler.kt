@@ -3,6 +3,7 @@ package huskybot.handlers
 import huskybot.modules.leveling.LevelManager.updateXp
 import huskybot.modules.logging.GuildLogManager.logUserJoin
 import huskybot.modules.logging.GuildLogManager.logUserLeave
+import huskybot.modules.modmail.GuildSelector.getGuildsNext
 import huskybot.modules.modmail.GuildSelector.getGuildsPrevious
 import huskybot.modules.modmail.ModmailManager.onButtonPress
 import huskybot.modules.modmail.ModmailManager.onGuildMessage
@@ -52,6 +53,7 @@ class EventHandler : EventListener {
 
         when (event.componentId) {
             "ticket:prevpage" -> getGuildsPrevious(event)
+            "ticket:nextpage" -> getGuildsNext(event)
         }
     }
 

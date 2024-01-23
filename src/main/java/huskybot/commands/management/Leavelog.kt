@@ -5,7 +5,10 @@ import huskybot.cmdFramework.*
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import warden.framework.SubCommand
 
-@CommandProperties(description = "Enable Leavelog and set what channel you would like to be the log")
+@CommandProperties(
+    description = "Enable Leavelog and set what channel you would like to be the log",
+    category = CommandCategory.MANAGEMENT
+)
 class Leavelog : Command(ExecutionType.STANDARD) {
     override fun execute(context: Context) {
         //Invoke subcommand

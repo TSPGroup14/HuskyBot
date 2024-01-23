@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import warden.framework.SubCommand
 import java.awt.Color
-import javax.xml.crypto.Data
 
 @CommandProperties(description = "Setup and modify settings for the modmail system")
 class Modmail : Command(ExecutionType.STANDARD) {

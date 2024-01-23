@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.interactions.commands.OptionType
 
 @CommandProperties(description = "View your level")
-@Option(name = "user", description = "User that you would like to ban", type = OptionType.USER, required = false)
+@Option(name = "user", description = "User whose level you would like to view", type = OptionType.USER, required = false)
 class Level : Command(ExecutionType.STANDARD) {
     override fun execute(ctx: Context) {
         val user = ctx.args.next("user", ArgumentResolver.USER) ?: ctx.member.user

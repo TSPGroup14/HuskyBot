@@ -5,7 +5,10 @@ import huskybot.cmdFramework.*
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import warden.framework.SubCommand
 
-@CommandProperties(description = "Enable joinlog and set what channel you would like to be the log")
+@CommandProperties(
+    description = "Enable joinlog and set what channel you would like to be the log",
+    category = CommandCategory.MANAGEMENT
+)
 class Joinlog : Command(ExecutionType.STANDARD) {
     override fun execute(context: Context) {
         //Invoke subcommand
