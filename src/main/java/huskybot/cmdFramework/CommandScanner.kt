@@ -2,7 +2,6 @@ package huskybot.cmdFramework
 
 import com.google.common.reflect.ClassPath
 import huskybot.HuskyBot
-import warden.framework.SubCommand
 
 class CommandScanner(private val pkg: String) {
     fun scan(): Map<String, Command> {

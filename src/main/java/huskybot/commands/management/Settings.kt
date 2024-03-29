@@ -5,7 +5,6 @@ import huskybot.cmdFramework.*
 import huskybot.utils.addFields
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.interactions.commands.OptionType
-import warden.framework.SubCommand
 import java.awt.Color
 
 @CommandProperties(

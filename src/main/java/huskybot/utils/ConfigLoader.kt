@@ -21,7 +21,7 @@ class ConfigLoader(filePath: String) {
 
     companion object {
         fun load(): ConfigLoader {
-            val configPath = System.getenv("warden_config")
+            val configPath = System.getenv("huskybot_config")
                 ?: "config.properties"
 
             return ConfigLoader(configPath)

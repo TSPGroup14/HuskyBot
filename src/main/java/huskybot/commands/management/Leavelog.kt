@@ -3,7 +3,6 @@ package huskybot.commands.management
 import huskybot.Database
 import huskybot.cmdFramework.*
 import net.dv8tion.jda.api.interactions.commands.OptionType
-import warden.framework.SubCommand
 
 @CommandProperties(
     description = "Enable Leavelog and set what channel you would like to be the log",

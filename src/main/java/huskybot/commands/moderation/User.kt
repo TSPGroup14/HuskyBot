@@ -5,7 +5,6 @@ import huskybot.HuskyBot
 import huskybot.cmdFramework.*
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.interactions.commands.OptionType
-import warden.framework.SubCommand
 
 @CommandProperties(description = "Manually change a user's XP count")
 class User : Command(ExecutionType.STANDARD){
