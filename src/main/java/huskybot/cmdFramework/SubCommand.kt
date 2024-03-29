@@ -1,4 +1,4 @@
-package warden.framework
+package huskybot.cmdFramework
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
