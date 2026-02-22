@@ -4,6 +4,9 @@ import huskybot.Database
 import huskybot.cmdFramework.*
 import net.dv8tion.jda.api.interactions.commands.OptionType
 
+/**
+ * Testing command that can be adapted for various functions
+ */
 @CommandProperties(description = "Testing command")
 class Test : Command(ExecutionType.STANDARD) {
     override fun execute(context: Context) {
