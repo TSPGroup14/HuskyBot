@@ -26,7 +26,5 @@ class Test : Command(ExecutionType.STANDARD) {
        ctx.guild?.let { Database.setCategory(it.idLong, category?.get()?.idLong) }
 
         ctx.hookedEmbed("Modmail Category Created", "**Category Name:** ``${category?.get()?.name}``")
-
-        //more test comments
     }
 }
